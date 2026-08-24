@@ -26,7 +26,7 @@ const BASE_VECTORS = TOOLTIP_ANCHORS.map(a => latLonToVec3(a.lat, a.lon))
 export default function Globe({ size = 648 }) {
   const mountRef    = useRef(null)
   const tooltipRefs = useRef([])
-  const stateRef    = useRef({ paused: false, mesh: null, raf: null, dragging: false, lastX: 0 })
+  const stateRef    = useRef({ paused: false, mesh: null, raf: null, dragging: false, lastX: 0, velocity: 0 })
 
   useEffect(() => {
     const el = mountRef.current
@@ -61,6 +61,7 @@ export default function Globe({ size = 648 }) {
 
     const SPEED = 0.0015
     const DRAG_SENSITIVITY = 0.005
+    const DAMPING = 0.93
     const tmpWorld = new THREE.Vector3()
     const tmpProj  = new THREE.Vector3()
     const tmpNorm  = new THREE.Vector3()
@@ -68,7 +69,17 @@ export default function Globe({ size = 648 }) {
 
     function animate() {
       stateRef.current.raf = requestAnimationFrame(animate)
-      if (!stateRef.current.paused) mesh.rotation.y -= SPEED
+      const s = stateRef.current
+      if (s.dragging) {
+        // nothing — mousemove drives rotation directly
+      } else if (Math.abs(s.velocity) > 0.0001) {
+        // momentum coast after drag release
+        mesh.rotation.y += s.velocity
+        s.velocity *= DAMPING
+      } else {
+        s.velocity = 0
+        if (!s.paused) mesh.rotation.y -= SPEED
+      }
       renderer.render(scene, camera)
 
       // Project tooltip anchors to canvas coords
@@ -98,24 +109,30 @@ export default function Globe({ size = 648 }) {
     animate()
 
     const onMouseDown = (e) => {
-      stateRef.current.dragging = true
-      stateRef.current.lastX = e.clientX
-      stateRef.current.paused = true
+      const s = stateRef.current
+      s.dragging = true
+      s.lastX = e.clientX
+      s.velocity = 0
+      s.paused = true
       gsap.killTweensOf(mesh.rotation)
       el.style.cursor = 'grabbing'
     }
 
     const onMouseMove = (e) => {
-      if (!stateRef.current.dragging) return
-      const dx = e.clientX - stateRef.current.lastX
-      stateRef.current.lastX = e.clientX
+      const s = stateRef.current
+      if (!s.dragging) return
+      const dx = e.clientX - s.lastX
+      s.lastX = e.clientX
+      // exponential moving average for smooth velocity tracking
+      s.velocity = s.velocity * 0.6 + dx * DRAG_SENSITIVITY * 0.4
       mesh.rotation.y += dx * DRAG_SENSITIVITY
     }
 
     const onMouseUp = () => {
-      if (!stateRef.current.dragging) return
-      stateRef.current.dragging = false
-      stateRef.current.paused = false
+      const s = stateRef.current
+      if (!s.dragging) return
+      s.dragging = false
+      // let momentum coast — animate loop handles it, then resumes auto-spin
       el.style.cursor = 'grab'
     }
 
@@ -138,11 +155,11 @@ export default function Globe({ size = 648 }) {
   }, [size])
 
   const pause = () => {
-    if (stateRef.current.dragging) return
-    stateRef.current.paused = true
-    const rot = stateRef.current.mesh.rotation
+    const s = stateRef.current
+    if (s.dragging || Math.abs(s.velocity) > 0.0001) return
+    s.paused = true
+    const rot = s.mesh.rotation
     gsap.killTweensOf(rot)
-    // Normalize to [-π, π] so reset is always ≤ half a turn
     let y = rot.y % (Math.PI * 2)
     if (y > Math.PI) y -= Math.PI * 2
     if (y < -Math.PI) y += Math.PI * 2
@@ -150,9 +167,11 @@ export default function Globe({ size = 648 }) {
     gsap.to(rot, { y: 0, duration: 1.0, ease: 'power2.out' })
   }
   const resume = () => {
-    if (stateRef.current.dragging) return
-    gsap.killTweensOf(stateRef.current.mesh.rotation)
-    stateRef.current.paused = false
+    const s = stateRef.current
+    if (s.dragging) return
+    gsap.killTweensOf(s.mesh.rotation)
+    s.velocity = 0
+    s.paused = false
   }
 
   return (
