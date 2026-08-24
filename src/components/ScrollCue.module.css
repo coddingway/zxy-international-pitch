@@ -1,8 +1,8 @@
-/* Ellipse 5 — 56px circle, horizontally centred, 24px off the bottom.
-   Figma places it at x=692 in a 1440 frame, so its centre is exactly 720 = 1440/2.
-   Drawn in CSS rather than shipped as an SVG: it is a bordered circle with a drop
-   shadow, fully described by the Figma fill/stroke/effect, and it matches how the
-   nav pills are already built. */
+/* Ellipse 5 + arrow — 56px circle with a 24px down arrow centred in it,
+   horizontally centred and 24px off the bottom. Figma puts the circle at x=692
+   in a 1440 frame (centre 720 = 1440/2) and the arrow at x=708 (centre 720 too).
+   The circle is drawn in CSS — it is just a bordered disc with a drop shadow,
+   matching how the nav pills are built. The arrow is the exported Figma glyph. */
 .cue {
   position: absolute;
   left: 50%;
@@ -14,5 +14,14 @@
   background: #fff;
   border: 0.5px solid #e7e7e7;
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
+}
+
+.arrow {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
