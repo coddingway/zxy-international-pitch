@@ -1,5 +1,6 @@
 import GlobeBadge from './GlobeBadge.jsx'
 import Nav from './Nav.jsx'
+import ScrollCue from './ScrollCue.jsx'
 import styles from './Screen2.module.css'
 
 export default function Screen2({ onBack }) {
@@ -15,6 +16,7 @@ export default function Screen2({ onBack }) {
 
       <Nav />
 
+      <ScrollCue />
       <GlobeBadge onClick={onBack} />
     </div>
   )

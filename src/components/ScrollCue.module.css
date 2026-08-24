@@ -1,0 +1,18 @@
+/* Ellipse 5 — 56px circle, horizontally centred, 24px off the bottom.
+   Figma places it at x=692 in a 1440 frame, so its centre is exactly 720 = 1440/2.
+   Drawn in CSS rather than shipped as an SVG: it is a bordered circle with a drop
+   shadow, fully described by the Figma fill/stroke/effect, and it matches how the
+   nav pills are already built. */
+.cue {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  border: 0.5px solid #e7e7e7;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
