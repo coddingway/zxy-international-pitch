@@ -32,7 +32,7 @@
   top: 2.778vw;
   width: 64.722vw;
   height: 48.542vw;
-  animation: drift1 74s ease-in-out infinite alternate;
+  animation: drift1 15s ease-in-out infinite alternate;
 }
 
 /* Cloud 2 — bleeds off the right edge */
@@ -41,7 +41,7 @@
   top: 3.611vw;
   width: 62.708vw;
   height: 47.014vw;
-  animation: drift2 61s ease-in-out infinite alternate;
+  animation: drift2 13s ease-in-out infinite alternate;
 }
 
 /* Cloud 3 — same bitmap as Cloud 1, scaled down. Sits fully inside the frame,
@@ -52,22 +52,22 @@
   width: 32.639vw;
   height: 24.444vw;
   opacity: 0.9;
-  animation: drift3 47s ease-in-out infinite alternate;
+  animation: drift3 11s ease-in-out infinite alternate;
 }
 
 @keyframes drift1 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(5vw, 1.2vw, 0); }
+  to   { transform: translate3d(14vw, 3vw, 0); }
 }
 
 @keyframes drift2 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-4.5vw, -1.4vw, 0); }
+  to   { transform: translate3d(-12vw, -2.5vw, 0); }
 }
 
 @keyframes drift3 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(3vw, -0.8vw, 0); }
+  to   { transform: translate3d(9vw, -2vw, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
