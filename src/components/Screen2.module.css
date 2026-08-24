@@ -1,12 +1,67 @@
 /* Figma frame is 1440×907. Everything below is expressed as a fraction of that
    1440px width (vw), so the field and the clouds scale together as one image. */
 
+/* Screen 2 owns its own scroll rather than the window, so the global
+   `overflow: hidden` (and screen 1) stay untouched. */
 .root {
   position: relative;
   width: 100vw;
   height: 100vh;
   background: #6f7d5a; /* field green — covers any gap before the photo paints */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.root::-webkit-scrollbar { display: none; }
+
+/* the scroll runway — its height is how much scrolling the transition takes */
+.track {
+  position: relative;
+  height: 400vh;
+}
+
+/* everything the viewer sees, pinned while the runway scrolls past */
+.stage {
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
+}
+
+/* field + clouds, zoomed as one unit */
+.scene {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.white {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.cueWrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
 }
 
 /* image 32 — 1440×1440 square, pulled up 196px so the frame crops it */

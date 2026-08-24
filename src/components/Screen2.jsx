@@ -1,23 +1,114 @@
+import { useEffect, useRef } from 'react'
 import GlobeBadge from './GlobeBadge.jsx'
 import Nav from './Nav.jsx'
 import ScrollCue from './ScrollCue.jsx'
 import styles from './Screen2.module.css'
 
+// Scroll choreography, as fractions of the scroll track.
+// The scene zooms into the field, white takes over, then the video is scrubbed
+// frame-by-frame by the remaining scroll. Nothing ever auto-plays.
+const ZOOM_END        = 0.35   // scene finishes its zoom
+const ZOOM_SCALE      = 2.4
+const WHITE_IN        = 0.26   // white starts covering
+const SWAP            = 0.40   // white is solid: scene out, video in
+const WHITE_OUT       = 0.54   // white fully gone, video exposed
+const CUE_OUT         = 0.12   // scroll cue fades once scrolling starts
+
+const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
+const range = (v, a, b) => clamp01((v - a) / (b - a))
+
 export default function Screen2({ onBack }) {
+  const scrollRef = useRef(null)
+  const sceneRef  = useRef(null)
+  const videoRef  = useRef(null)
+  const whiteRef  = useRef(null)
+  const cueRef    = useRef(null)
+
+  useEffect(() => {
+    const scroller = scrollRef.current
+    const scene = sceneRef.current
+    const video = videoRef.current
+    const white = whiteRef.current
+    const cue   = cueRef.current
+    let raf = 0
+
+    const apply = () => {
+      raf = 0
+      const span = scroller.scrollHeight - scroller.clientHeight
+      const p = span > 0 ? clamp01(scroller.scrollTop / span) : 0
+
+      // 1. camera pushes into the field — accelerating, so it reads as a descent
+      const z = range(p, 0, ZOOM_END)
+      scene.style.transform = `scale(${1 + (ZOOM_SCALE - 1) * z * z})`
+
+      // 2. white covers the swap
+      white.style.opacity = String(range(p, WHITE_IN, SWAP) - range(p, SWAP, WHITE_OUT))
+
+      // 3. hand off to the video under full white
+      const onVideo = p >= SWAP
+      scene.style.opacity = onVideo ? '0' : '1'
+      video.style.opacity = onVideo ? '1' : '0'
+      cue.style.opacity = String(1 - range(p, 0, CUE_OUT))
+
+      // 4. scrub. Never play() — the scroll position IS the playhead.
+      const d = video.duration
+      if (onVideo && d && isFinite(d)) {
+        const t = range(p, SWAP, 1) * d
+        if (video.readyState >= 1 && Math.abs(video.currentTime - t) > 1 / 48) {
+          video.currentTime = t
+        }
+      }
+    }
+
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply) }
+
+    scroller.scrollTop = 0
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    video.addEventListener('loadedmetadata', apply)
+    apply()
+
+    return () => {
+      cancelAnimationFrame(raf)
+      scroller.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      video.removeEventListener('loadedmetadata', apply)
+    }
+  }, [])
+
   return (
-    <div className={styles.root}>
-      {/* image 32 — aerial field, cropped square */}
-      <img src="/field-top.png" alt="" className={styles.field} />
+    <div ref={scrollRef} className={styles.root}>
+      <div className={styles.track}>
+        <div className={styles.stage}>
+          <div ref={sceneRef} className={styles.scene}>
+            {/* image 32 — aerial field, cropped square */}
+            <img src="/field-top.png" alt="" className={styles.field} />
 
-      {/* Clouds drift above the field. Cloud 3 reuses Cloud 1's bitmap (as in Figma). */}
-      <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud1}`} />
-      <img src="/cloud-2.png" alt="" className={`${styles.cloud} ${styles.cloud2}`} />
-      <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud3}`} />
+            {/* Clouds drift above the field. Cloud 3 reuses Cloud 1's bitmap (as in Figma). */}
+            <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud1}`} />
+            <img src="/cloud-2.png" alt="" className={`${styles.cloud} ${styles.cloud2}`} />
+            <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud3}`} />
+          </div>
 
-      <Nav />
+          <video
+            ref={videoRef}
+            className={styles.video}
+            src="/cotton_zoom_transition_to_globe.mp4"
+            muted
+            playsInline
+            preload="auto"
+            disablePictureInPicture
+          />
 
-      <ScrollCue />
-      <GlobeBadge onClick={onBack} />
+          <div ref={whiteRef} className={styles.white} />
+
+          <Nav />
+          <div ref={cueRef} className={styles.cueWrap}>
+            <ScrollCue />
+          </div>
+          <GlobeBadge onClick={onBack} />
+        </div>
+      </div>
     </div>
   )
 }
