@@ -41,18 +41,18 @@
 
 .cloud1 {
   left: 0;
-  top: 2.778vw;
-  width: 64.722vw;
-  height: 48.542vw;
+  top: -4.778vw;
+  width: 57.722vw;
+  height: 40.542vw;
   animation: crossRight1 90s linear infinite;
   animation-delay: -24.78s; /* = Figma left -19.375vw */
 }
 
 .cloud2 {
   left: 0;
-  top: 3.611vw;
-  width: 62.708vw;
-  height: 47.014vw;
+  top: -1.611vw;
+  width: 82.708vw;
+  height: 67.014vw;
   animation: crossLeft2 75s linear infinite;
   animation-delay: -17.22s; /* = Figma left 62.639vw */
 }
@@ -60,9 +60,9 @@
 /* Cloud 3 reuses Cloud 1's bitmap at a smaller size, as in Figma. */
 .cloud3 {
   left: 0;
-  top: 40.208vw;
-  width: 32.639vw;
-  height: 24.444vw;
+  top: 42.208vw;
+  width: 22.639vw;
+  height: 17.444vw;
   opacity: 0.9;
   animation: crossRight3 56s linear infinite;
   animation-delay: -28s; /* = Figma left 33.681vw */
@@ -91,27 +91,4 @@
   .cloud1 { transform: translate3d(-19.375vw, 0, 0); }
   .cloud2 { transform: translate3d(62.639vw, 0, 0); }
   .cloud3 { transform: translate3d(33.681vw, 0, 0); }
-}
-
-/* Group 24 — mini globe badge, 32px inset from the bottom-right corner */
-.globeBadge {
-  position: absolute;
-  right: 32px;
-  bottom: 32px;
-  width: 80px;
-  height: 80px;
-}
-
-.globeHalo {
-  position: absolute;
-  inset: 0;
-  width: 80px;
-  height: 80px;
-}
-
-.globeInner {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
 }

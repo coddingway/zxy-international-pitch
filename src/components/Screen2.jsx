@@ -1,9 +1,8 @@
-import Globe from './Globe.jsx'
+import GlobeBadge from './GlobeBadge.jsx'
 import Nav from './Nav.jsx'
 import styles from './Screen2.module.css'
-import globeHalo from '../assets/globe-halo.svg'
 
-export default function Screen2() {
+export default function Screen2({ onBack }) {
   return (
     <div className={styles.root}>
       {/* image 32 — aerial field, cropped square */}
@@ -16,13 +15,7 @@ export default function Screen2() {
 
       <Nav />
 
-      {/* Group 24 — the Screen 1 globe, shrunk. Spins forever, no input. */}
-      <div className={styles.globeBadge}>
-        <img src={globeHalo} alt="" className={styles.globeHalo} />
-        <div className={styles.globeInner}>
-          <Globe size={67} interactive={false} />
-        </div>
-      </div>
+      <GlobeBadge onClick={onBack} />
     </div>
   )
 }
