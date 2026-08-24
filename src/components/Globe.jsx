@@ -109,7 +109,7 @@ export default function Globe({ size = 648 }) {
       if (!stateRef.current.dragging) return
       const dx = e.clientX - stateRef.current.lastX
       stateRef.current.lastX = e.clientX
-      mesh.rotation.y -= dx * DRAG_SENSITIVITY
+      mesh.rotation.y += dx * DRAG_SENSITIVITY
     }
 
     const onMouseUp = () => {
