@@ -26,52 +26,67 @@
   will-change: transform;
 }
 
-/* Cloud 1 — bleeds off the left edge, so it has room to drift */
+/* Clouds cross the full viewport and wrap. Each starts just off one edge and
+   ends just off the other, so the wrap happens while it is fully out of frame —
+   no pop. Cloud 1 and 3 travel left→right, cloud 2 right→left, so they meet and
+   overlap mid-screen. Speeds are deliberately unequal (and non-harmonic) so the
+   crossings never settle into a repeating pattern.
+
+   Coverage: each cloud is at least partly on screen for its entire cycle apart
+   from the instant it wraps, and the negative delays stagger all three — so the
+   viewport is never empty. */
+
 .cloud1 {
-  left: -19.375vw;
+  left: 0;
   top: 2.778vw;
   width: 64.722vw;
   height: 48.542vw;
-  animation: drift1 15s ease-in-out infinite alternate;
+  animation: crossRight1 55s linear infinite;
 }
 
-/* Cloud 2 — bleeds off the right edge */
 .cloud2 {
-  left: 62.639vw;
+  left: 0;
   top: 3.611vw;
   width: 62.708vw;
   height: 47.014vw;
-  animation: drift2 13s ease-in-out infinite alternate;
+  animation: crossLeft2 45s linear infinite;
+  animation-delay: -15s;
 }
 
-/* Cloud 3 — same bitmap as Cloud 1, scaled down. Sits fully inside the frame,
-   so it gets the shortest travel to avoid reading as a sliding sprite. */
+/* Cloud 3 reuses Cloud 1's bitmap at a smaller size, as in Figma. */
 .cloud3 {
-  left: 33.681vw;
+  left: 0;
   top: 40.208vw;
   width: 32.639vw;
   height: 24.444vw;
   opacity: 0.9;
-  animation: drift3 11s ease-in-out infinite alternate;
+  animation: crossRight3 33s linear infinite;
+  animation-delay: -22s;
 }
 
-@keyframes drift1 {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(14vw, 3vw, 0); }
+/* start offsets equal each cloud's own width, so it begins fully off-frame */
+@keyframes crossRight1 {
+  from { transform: translate3d(-64.722vw, 0, 0); }
+  to   { transform: translate3d(100vw, 0, 0); }
 }
 
-@keyframes drift2 {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-12vw, -2.5vw, 0); }
+@keyframes crossLeft2 {
+  from { transform: translate3d(100vw, 0, 0); }
+  to   { transform: translate3d(-62.708vw, 0, 0); }
 }
 
-@keyframes drift3 {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(9vw, -2vw, 0); }
+@keyframes crossRight3 {
+  from { transform: translate3d(-32.639vw, 0, 0); }
+  to   { transform: translate3d(100vw, 0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* park them in the original Figma composition rather than at translate 0,
+     which would stack all three against the left edge */
   .cloud1, .cloud2, .cloud3 { animation: none; }
+  .cloud1 { transform: translate3d(-19.375vw, 0, 0); }
+  .cloud2 { transform: translate3d(62.639vw, 0, 0); }
+  .cloud3 { transform: translate3d(33.681vw, 0, 0); }
 }
 
 /* Group 24 — mini globe badge, 32px inset from the bottom-right corner */

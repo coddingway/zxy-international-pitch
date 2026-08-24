@@ -25,6 +25,7 @@ const BASE_VECTORS = TOOLTIP_ANCHORS.map(a => latLonToVec3(a.lat, a.lon))
 
 // interactive=false → the Screen 2 mini globe: spins forever, no tooltips, no input.
 export default function Globe({ size = 648, onAnchorClick, interactive = true }) {
+  const rootRef     = useRef(null)
   const mountRef    = useRef(null)
   const tooltipRefs = useRef([])
   const stateRef    = useRef({ paused: false, mesh: null, camera: null, raf: null, dragging: false, lastX: 0, velocity: 0, zooming: false })
@@ -39,6 +40,7 @@ export default function Globe({ size = 648, onAnchorClick, interactive = true })
     renderer.setClearColor(0x000000, 0)
     renderer.outputColorSpace = THREE.SRGBColorSpace
     el.appendChild(renderer.domElement)
+    stateRef.current.renderer = renderer
 
     const scene  = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100)
@@ -204,15 +206,23 @@ export default function Globe({ size = 648, onAnchorClick, interactive = true })
     // fire immediately — the parent rides this 1.45s dolly with its whiteout
     onAnchorClick?.(TOOLTIP_ANCHORS[i].label)
 
+    // The canvas is a fixed `size` circle, so the camera alone can never fill the
+    // screen. Scale the circle past the viewport diagonal as the camera dollies in,
+    // and raise the renderer's backing resolution so the blow-up stays sharp.
+    const cover = (Math.hypot(window.innerWidth, window.innerHeight) / size) * 1.2
+    s.renderer.setPixelRatio(Math.min(window.devicePixelRatio * 2, 4))
+    s.renderer.setSize(size, size)
+
     const tl = gsap.timeline()
     tl.to(rot, { y: rot.y + delta, duration: 0.8, ease: 'power2.inOut' }, 0)
     tl.to(s.camera.position, { y: 0, duration: 0.8, ease: 'power2.inOut' }, 0)
     // accelerate inward — reads as falling into the surface
-    tl.to(s.camera.position, { z: 1.02, duration: 1.1, ease: 'power2.in' }, 0.35)
+    tl.to(s.camera.position, { z: 1.25, duration: 1.1, ease: 'power2.in' }, 0.35)
+    tl.to(rootRef.current, { scale: cover, duration: 1.1, ease: 'power2.in' }, 0.35)
   }
 
   return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+    <div ref={rootRef} style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       {/* Canvas — clipped to circle */}
       <div
         ref={mountRef}
