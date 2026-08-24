@@ -3,6 +3,7 @@ import GlobeBadge from './GlobeBadge.jsx'
 import Nav from './Nav.jsx'
 import ScrollCue from './ScrollCue.jsx'
 import styles from './Screen2.module.css'
+import { createFrameSequence } from '../lib/frameSequence.js'
 
 // Scroll choreography, as fractions of the scroll track.
 // The scene zooms into the field, white takes over, then the video is scrubbed
@@ -13,6 +14,7 @@ const WHITE_IN        = 0.26   // white starts covering
 const SWAP            = 0.40   // white is solid: scene out, video in
 const WHITE_OUT       = 0.54   // white fully gone, video exposed
 const CUE_OUT         = 0.12   // scroll cue fades once scrolling starts
+const FRAME_COUNT     = 192    // public/cotton-seq/frame_001..192.jpg
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
 const range = (v, a, b) => clamp01((v - a) / (b - a))
@@ -20,17 +22,23 @@ const range = (v, a, b) => clamp01((v - a) / (b - a))
 export default function Screen2({ onBack }) {
   const scrollRef = useRef(null)
   const sceneRef  = useRef(null)
-  const videoRef  = useRef(null)
+  const canvasRef = useRef(null)
   const whiteRef  = useRef(null)
   const cueRef    = useRef(null)
 
   useEffect(() => {
     const scroller = scrollRef.current
     const scene = sceneRef.current
-    const video = videoRef.current
+    const canvas = canvasRef.current
     const white = whiteRef.current
     const cue   = cueRef.current
     let raf = 0
+
+    const seq = createFrameSequence({
+      canvas,
+      count: FRAME_COUNT,
+      url: n => `/cotton-seq/frame_${String(n).padStart(3, '0')}.jpg`,
+    })
 
     const apply = () => {
       raf = 0
@@ -44,35 +52,36 @@ export default function Screen2({ onBack }) {
       // 2. white covers the swap
       white.style.opacity = String(range(p, WHITE_IN, SWAP) - range(p, SWAP, WHITE_OUT))
 
-      // 3. hand off to the video under full white
-      const onVideo = p >= SWAP
-      scene.style.opacity = onVideo ? '0' : '1'
-      video.style.opacity = onVideo ? '1' : '0'
+      // 3. hand off to the sequence under full white
+      const onSeq = p >= SWAP
+      scene.style.opacity = onSeq ? '0' : '1'
+      canvas.style.opacity = onSeq ? '1' : '0'
       cue.style.opacity = String(1 - range(p, 0, CUE_OUT))
 
-      // 4. scrub. Never play() — the scroll position IS the playhead.
-      const d = video.duration
-      if (onVideo && d && isFinite(d)) {
-        const t = range(p, SWAP, 1) * d
-        if (video.readyState >= 1 && Math.abs(video.currentTime - t) > 1 / 48) {
-          video.currentTime = t
-        }
-      }
+      // 4. scrub — scroll position IS the playhead
+      if (onSeq) seq.draw(range(p, SWAP, 1))
     }
 
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply) }
+    // Cancel-and-requeue rather than an `if (!raf)` guard: a frame queued while
+    // the tab is hidden may never fire, which would leave the guard latched and
+    // silently kill every later scroll update.
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(apply)
+    }
 
     scroller.scrollTop = 0
     scroller.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
-    video.addEventListener('loadedmetadata', apply)
+    document.addEventListener('visibilitychange', onScroll)
     apply()
 
     return () => {
       cancelAnimationFrame(raf)
       scroller.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
-      video.removeEventListener('loadedmetadata', apply)
+      document.removeEventListener('visibilitychange', onScroll)
+      seq.dispose()
     }
   }, [])
 
@@ -90,15 +99,7 @@ export default function Screen2({ onBack }) {
             <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud3}`} />
           </div>
 
-          <video
-            ref={videoRef}
-            className={styles.video}
-            src="/cotton_zoom_transition_to_globe.mp4"
-            muted
-            playsInline
-            preload="auto"
-            disablePictureInPicture
-          />
+          <canvas ref={canvasRef} className={styles.video} aria-hidden="true" />
 
           <div ref={whiteRef} className={styles.white} />
 
