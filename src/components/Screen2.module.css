@@ -1,0 +1,98 @@
+/* Figma frame is 1440×907. Everything below is expressed as a fraction of that
+   1440px width (vw), so the field and the clouds scale together as one image. */
+
+.root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #6f7d5a; /* field green — covers any gap before the photo paints */
+  overflow: hidden;
+}
+
+/* image 32 — 1440×1440 square, pulled up 196px so the frame crops it */
+.field {
+  position: absolute;
+  left: 0;
+  top: -13.611vw;
+  width: 100vw;
+  height: 100vw;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.cloud {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Cloud 1 — bleeds off the left edge, so it has room to drift */
+.cloud1 {
+  left: -19.375vw;
+  top: 2.778vw;
+  width: 64.722vw;
+  height: 48.542vw;
+  animation: drift1 74s ease-in-out infinite alternate;
+}
+
+/* Cloud 2 — bleeds off the right edge */
+.cloud2 {
+  left: 62.639vw;
+  top: 3.611vw;
+  width: 62.708vw;
+  height: 47.014vw;
+  animation: drift2 61s ease-in-out infinite alternate;
+}
+
+/* Cloud 3 — same bitmap as Cloud 1, scaled down. Sits fully inside the frame,
+   so it gets the shortest travel to avoid reading as a sliding sprite. */
+.cloud3 {
+  left: 33.681vw;
+  top: 40.208vw;
+  width: 32.639vw;
+  height: 24.444vw;
+  opacity: 0.9;
+  animation: drift3 47s ease-in-out infinite alternate;
+}
+
+@keyframes drift1 {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(5vw, 1.2vw, 0); }
+}
+
+@keyframes drift2 {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-4.5vw, -1.4vw, 0); }
+}
+
+@keyframes drift3 {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(3vw, -0.8vw, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud1, .cloud2, .cloud3 { animation: none; }
+}
+
+/* Group 24 — mini globe badge, 32px inset from the bottom-right corner */
+.globeBadge {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  width: 80px;
+  height: 80px;
+}
+
+.globeHalo {
+  position: absolute;
+  inset: 0;
+  width: 80px;
+  height: 80px;
+}
+
+.globeInner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}

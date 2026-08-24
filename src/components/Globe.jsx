@@ -5,10 +5,10 @@ import { gsap } from 'gsap'
 // lat/lon positions of crop labels on the sphere surface
 // lon=0 = front-facing at start; positive lon = right, negative = left
 const TOOLTIP_ANCHORS = [
-  { label: 'Hemp',        lat:  33, lon: -57 },
-  { label: 'Flax',        lat:  42, lon:  67 },
-  { label: 'eucalyptus',  lat:  -4, lon:  47 },
-  { label: 'Cotton boll', lat: -66, lon: -13 },
+  { label: 'Hemp',        lat:  33, lon: -7 },
+  { label: 'Flax',        lat:  32, lon:  157 },
+  { label: 'eucalyptus',  lat:  4, lon:  97 },
+  { label: 'Cotton boll', lat: -10, lon: 23 },
 ]
 
 function latLonToVec3(lat, lon) {
@@ -23,10 +23,11 @@ function latLonToVec3(lat, lon) {
 
 const BASE_VECTORS = TOOLTIP_ANCHORS.map(a => latLonToVec3(a.lat, a.lon))
 
-export default function Globe({ size = 648 }) {
+// interactive=false → the Screen 2 mini globe: spins forever, no tooltips, no input.
+export default function Globe({ size = 648, onAnchorClick, interactive = true }) {
   const mountRef    = useRef(null)
   const tooltipRefs = useRef([])
-  const stateRef    = useRef({ paused: false, mesh: null, raf: null, dragging: false, lastX: 0, velocity: 0 })
+  const stateRef    = useRef({ paused: false, mesh: null, camera: null, raf: null, dragging: false, lastX: 0, velocity: 0, zooming: false })
 
   useEffect(() => {
     const el = mountRef.current
@@ -43,6 +44,7 @@ export default function Globe({ size = 648 }) {
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100)
     camera.position.set(0, 0.8, 3.8)
     camera.lookAt(0, 0, 0)
+    stateRef.current.camera = camera
 
     const geometry = new THREE.SphereGeometry(1, 64, 64)
     const texture  = new THREE.TextureLoader().load('/globe-equirect.png')
@@ -70,8 +72,9 @@ export default function Globe({ size = 648 }) {
     function animate() {
       stateRef.current.raf = requestAnimationFrame(animate)
       const s = stateRef.current
-      if (s.dragging) {
-        // nothing — mousemove drives rotation directly
+      if (s.dragging || s.zooming) {
+        // dragging: mousemove drives rotation. zooming: GSAP drives camera + rotation.
+        if (s.zooming) camera.lookAt(0, 0, 0)
       } else if (Math.abs(s.velocity) > 0.0001) {
         // momentum coast after drag release
         mesh.rotation.y += s.velocity
@@ -89,6 +92,8 @@ export default function Globe({ size = 648 }) {
       BASE_VECTORS.forEach((base, i) => {
         const el = refs[i]
         if (!el) return
+
+        if (s.zooming) { el.style.opacity = '0'; return }
 
         tmpWorld.copy(base).applyMatrix4(mesh.matrixWorld)
         tmpNorm.copy(tmpWorld).normalize()
@@ -110,6 +115,7 @@ export default function Globe({ size = 648 }) {
 
     const onMouseDown = (e) => {
       const s = stateRef.current
+      if (s.zooming) return
       s.dragging = true
       s.lastX = e.clientX
       s.velocity = 0
@@ -136,9 +142,11 @@ export default function Globe({ size = 648 }) {
       el.style.cursor = 'grab'
     }
 
-    el.addEventListener('mousedown', onMouseDown)
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+    if (interactive) {
+      el.addEventListener('mousedown', onMouseDown)
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    }
 
     return () => {
       cancelAnimationFrame(stateRef.current.raf)
@@ -152,7 +160,7 @@ export default function Globe({ size = 648 }) {
       atmMat.dispose()
       if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
     }
-  }, [size])
+  }, [size, interactive])
 
   const pause = () => {
     const s = stateRef.current
@@ -168,10 +176,39 @@ export default function Globe({ size = 648 }) {
   }
   const resume = () => {
     const s = stateRef.current
-    if (s.dragging) return
+    if (s.dragging || s.zooming) return
     gsap.killTweensOf(s.mesh.rotation)
     s.velocity = 0
     s.paused = false
+  }
+
+  // Click an anchor: spin it to face camera, then dolly the camera into the surface.
+  const zoomToAnchor = (i) => {
+    const s = stateRef.current
+    if (s.zooming) return
+    s.zooming = true
+    s.dragging = false
+    s.velocity = 0
+    s.paused = true
+
+    const rot = s.mesh.rotation
+    gsap.killTweensOf(rot)
+    gsap.killTweensOf(s.camera.position)
+
+    // rotation.y = -lon brings the anchor to front; take the shortest path there
+    const targetY = -(TOOLTIP_ANCHORS[i].lon * Math.PI) / 180
+    let delta = (targetY - rot.y) % (Math.PI * 2)
+    if (delta > Math.PI) delta -= Math.PI * 2
+    if (delta < -Math.PI) delta += Math.PI * 2
+
+    // fire immediately — the parent rides this 1.45s dolly with its whiteout
+    onAnchorClick?.(TOOLTIP_ANCHORS[i].label)
+
+    const tl = gsap.timeline()
+    tl.to(rot, { y: rot.y + delta, duration: 0.8, ease: 'power2.inOut' }, 0)
+    tl.to(s.camera.position, { y: 0, duration: 0.8, ease: 'power2.inOut' }, 0)
+    // accelerate inward — reads as falling into the surface
+    tl.to(s.camera.position, { z: 1.02, duration: 1.1, ease: 'power2.in' }, 0.35)
   }
 
   return (
@@ -179,16 +216,21 @@ export default function Globe({ size = 648 }) {
       {/* Canvas — clipped to circle */}
       <div
         ref={mountRef}
-        onMouseEnter={pause}
-        onMouseLeave={resume}
-        style={{ width: size, height: size, borderRadius: '50%', overflow: 'hidden', cursor: 'grab', position: 'absolute', inset: 0 }}
+        onMouseEnter={interactive ? pause : undefined}
+        onMouseLeave={interactive ? resume : undefined}
+        style={{
+          width: size, height: size, borderRadius: '50%', overflow: 'hidden',
+          cursor: interactive ? 'grab' : 'default',
+          position: 'absolute', inset: 0,
+        }}
       />
       {/* Tooltip overlay — outside clip, tracks 3D positions */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {interactive && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {TOOLTIP_ANCHORS.map((anchor, i) => (
           <div
             key={anchor.label}
             ref={el => { tooltipRefs.current[i] = el }}
+            onClick={() => zoomToAnchor(i)}
             style={{
               position: 'absolute',
               display: 'flex',
@@ -197,7 +239,8 @@ export default function Globe({ size = 648 }) {
               transform: 'translate(-50%, -100%)',
               filter: 'drop-shadow(0px 15px 15px rgba(0,0,0,0.5))',
               opacity: 0,
-              pointerEvents: 'none',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
             }}
           >
             <div style={{
@@ -221,7 +264,7 @@ export default function Globe({ size = 648 }) {
             }} />
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   )
 }
