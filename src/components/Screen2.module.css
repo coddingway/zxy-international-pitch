@@ -32,16 +32,20 @@
    overlap mid-screen. Speeds are deliberately unequal (and non-harmonic) so the
    crossings never settle into a repeating pattern.
 
-   Coverage: each cloud is at least partly on screen for its entire cycle apart
-   from the instant it wraps, and the negative delays stagger all three — so the
-   viewport is never empty. */
+   The negative delays are not arbitrary: each is the exact point in its own
+   cycle where the cloud sits at its Figma left offset, so the first painted
+   frame is the Figma composition and the drift proceeds from there.
+
+   Coverage: each cloud is at least partly on screen for its whole cycle apart
+   from the instant it wraps, so the viewport is never empty. */
 
 .cloud1 {
   left: 0;
   top: 2.778vw;
   width: 64.722vw;
   height: 48.542vw;
-  animation: crossRight1 55s linear infinite;
+  animation: crossRight1 90s linear infinite;
+  animation-delay: -24.78s; /* = Figma left -19.375vw */
 }
 
 .cloud2 {
@@ -49,8 +53,8 @@
   top: 3.611vw;
   width: 62.708vw;
   height: 47.014vw;
-  animation: crossLeft2 45s linear infinite;
-  animation-delay: -15s;
+  animation: crossLeft2 75s linear infinite;
+  animation-delay: -17.22s; /* = Figma left 62.639vw */
 }
 
 /* Cloud 3 reuses Cloud 1's bitmap at a smaller size, as in Figma. */
@@ -60,8 +64,8 @@
   width: 32.639vw;
   height: 24.444vw;
   opacity: 0.9;
-  animation: crossRight3 33s linear infinite;
-  animation-delay: -22s;
+  animation: crossRight3 56s linear infinite;
+  animation-delay: -28s; /* = Figma left 33.681vw */
 }
 
 /* start offsets equal each cloud's own width, so it begins fully off-frame */
