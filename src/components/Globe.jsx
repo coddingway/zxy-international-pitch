@@ -8,7 +8,7 @@ const TOOLTIP_ANCHORS = [
   { label: 'Hemp',        lat:  33, lon: -57 },
   { label: 'Flax',        lat:  42, lon:  67 },
   { label: 'eucalyptus',  lat:  -4, lon:  47 },
-  { label: 'Cotton boll', lat: -36, lon: -13 },
+  { label: 'Cotton boll', lat: -66, lon: -13 },
 ]
 
 function latLonToVec3(lat, lon) {
@@ -26,7 +26,7 @@ const BASE_VECTORS = TOOLTIP_ANCHORS.map(a => latLonToVec3(a.lat, a.lon))
 export default function Globe({ size = 648 }) {
   const mountRef    = useRef(null)
   const tooltipRefs = useRef([])
-  const stateRef    = useRef({ paused: false, mesh: null, raf: null })
+  const stateRef    = useRef({ paused: false, mesh: null, raf: null, dragging: false, lastX: 0 })
 
   useEffect(() => {
     const el = mountRef.current
@@ -60,6 +60,7 @@ export default function Globe({ size = 648 }) {
     gsap.to(mesh.scale, { x: 1, y: 1, z: 1, duration: 1.4, ease: 'power2.out', delay: 0.3 })
 
     const SPEED = 0.0015
+    const DRAG_SENSITIVITY = 0.005
     const tmpWorld = new THREE.Vector3()
     const tmpProj  = new THREE.Vector3()
     const tmpNorm  = new THREE.Vector3()
@@ -96,8 +97,37 @@ export default function Globe({ size = 648 }) {
     }
     animate()
 
+    const onMouseDown = (e) => {
+      stateRef.current.dragging = true
+      stateRef.current.lastX = e.clientX
+      stateRef.current.paused = true
+      gsap.killTweensOf(mesh.rotation)
+      el.style.cursor = 'grabbing'
+    }
+
+    const onMouseMove = (e) => {
+      if (!stateRef.current.dragging) return
+      const dx = e.clientX - stateRef.current.lastX
+      stateRef.current.lastX = e.clientX
+      mesh.rotation.y -= dx * DRAG_SENSITIVITY
+    }
+
+    const onMouseUp = () => {
+      if (!stateRef.current.dragging) return
+      stateRef.current.dragging = false
+      stateRef.current.paused = false
+      el.style.cursor = 'grab'
+    }
+
+    el.addEventListener('mousedown', onMouseDown)
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+
     return () => {
       cancelAnimationFrame(stateRef.current.raf)
+      el.removeEventListener('mousedown', onMouseDown)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
       renderer.dispose()
       geometry.dispose()
       material.dispose()
@@ -108,6 +138,7 @@ export default function Globe({ size = 648 }) {
   }, [size])
 
   const pause = () => {
+    if (stateRef.current.dragging) return
     stateRef.current.paused = true
     const rot = stateRef.current.mesh.rotation
     gsap.killTweensOf(rot)
@@ -119,6 +150,7 @@ export default function Globe({ size = 648 }) {
     gsap.to(rot, { y: 0, duration: 1.0, ease: 'power2.out' })
   }
   const resume = () => {
+    if (stateRef.current.dragging) return
     gsap.killTweensOf(stateRef.current.mesh.rotation)
     stateRef.current.paused = false
   }
