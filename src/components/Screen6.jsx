@@ -30,8 +30,18 @@ export default function Screen6({ onBack }) {
       {/* Cloud 2 behind the jacket */}
       <img src="/cloud-1.png" alt="" className={styles.cloud2} />
 
-      <div className={styles.jacketWrap} style={{ '--s6-jacket-h': t.jacketH }}>
-        <img src={t.jacket} alt="ZXY apparel" className={styles.jacket} />
+      <div className={styles.jacketWrap}>
+        <div className={styles.jacketFloat}>
+          {ORDER.map(name => (
+            <img
+              key={name}
+              src={THEMES[name].jacket}
+              alt=""
+              className={`${styles.jacketLayer} ${theme === name ? styles.jacketOn : ''}`}
+              style={{ '--jh': THEMES[name].jacketH }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Cloud 1 in front of the jacket — this is what dissolves its lower left */}

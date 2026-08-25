@@ -1,3 +1,11 @@
+/* Registered so they interpolate: an unregistered custom property inside a
+   linear-gradient jumps between values, it does not transition. With @property
+   the browser knows they are colours and can tween them, so the whole theme
+   crossfades with the shirt. */
+@property --s6-from { syntax: '<color>'; inherits: true; initial-value: #dff6ff; }
+@property --s6-via  { syntax: '<color>'; inherits: true; initial-value: #bfeeff; }
+@property --s6-ink  { syntax: '<color>'; inherits: true; initial-value: #88daf9; }
+
 /* Figma frame 1440×907. Positions are expressed as fractions of that width (vw)
    so the whole composition scales as one image, matching screens 1–5. */
 
@@ -6,6 +14,7 @@
   inset: 0;
   overflow: hidden;
   background: linear-gradient(to bottom, var(--s6-from) 0%, var(--s6-via) 53.846%, #fff 100%);
+  transition: --s6-from 0.55s ease, --s6-via 0.55s ease, --s6-ink 0.55s ease;
 }
 
 /* headline sits BEHIND the jacket — "Many Worlds" is partly occluded by it,
@@ -36,18 +45,21 @@
   width: 72.5vw;             /* 1044/1440 */
   height: 54.306vw;          /* 782/1440 */
   pointer-events: none;
-  animation: s6drift2 18s ease-in-out infinite alternate;
+  animation: s6drift2 13s ease-in-out infinite alternate;
 }
 
 /* Scale and float live on separate elements on purpose: an animation setting
    `transform` on the img would replace the wrapper's scale outright, since
    transform is a single property. Wrapper scales, img floats. */
+/* Three elements, three jobs — transform is a single property, so scale and
+   float cannot share an element, and the crossfade needs its own layers.
+   wrap = scale, float = translateY, layers = opacity. */
 .jacketWrap {
   position: absolute;
   left: 36.111vw;            /* 520/1440 */
   top: 20.069vw;             /* 289/1440 */
   width: 27.847vw;           /* 401/1440 */
-  height: var(--s6-jacket-h);
+  height: 36.736vw;          /* tallest variant (529) so swapping never reflows */
   pointer-events: none;
   /* only the jacket grows on arrival — the rest of the screen is already in
      place. Driven by Screen2's scroll handler; defaults to 1 when standalone. */
@@ -56,18 +68,30 @@
   will-change: transform;
 }
 
-.jacket {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom;
+.jacketFloat {
+  position: absolute;
+  inset: 0;
   /* 1200ms hold, 5000ms ease-out up, 1200ms hold, 5000ms ease-out back:
      a 12.4s cycle. Held paused until the jacket has finished growing. */
   animation: jacketFloat 12.4s infinite;
   animation-play-state: var(--s6-float, running);
   will-change: transform;
 }
+
+/* all three are mounted and crossfade, so a switch never waits on a download */
+.jacketLayer {
+  position: absolute;
+  left: 0;
+  top: 0;                    /* Figma tops all three at y=289; heights differ */
+  width: 100%;
+  height: var(--jh);
+  object-fit: contain;
+  object-position: top;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+}
+
+.jacketOn { opacity: 1; }
 
 @keyframes jacketFloat {
   0%,     9.677% { transform: translateY(0);        animation-timing-function: ease-out; }
@@ -82,21 +106,21 @@
   width: 58.681vw;           /* 845/1440 */
   height: 43.958vw;          /* 633/1440 */
   pointer-events: none;
-  animation: s6drift1 14s ease-in-out infinite alternate;
+  animation: s6drift1 10s ease-in-out infinite alternate;
 }
 
-/* ~10px/s and ~6px/s at a 1440 viewport. The earlier 4vw/48s worked out at
+/* ~20px/s and ~12px/s at a 1440 viewport. The earlier 4vw/48s worked out at
    about 1px per second, which reads as static. Amplitudes are kept small enough
    that cloud 1 still overlaps the jacket's lower left at full drift, since that
    overlap is what dissolves it. */
 @keyframes s6drift1 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(10vw, -1.5vw, 0); }
+  to   { transform: translate3d(14vw, -2vw, 0); }
 }
 
 @keyframes s6drift2 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-8vw, 1.2vw, 0); }
+  to   { transform: translate3d(-11vw, 1.6vw, 0); }
 }
 
 .copy {
@@ -151,6 +175,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cloud1, .cloud2, .jacket { animation: none; }
+  .cloud1, .cloud2, .jacketFloat { animation: none; }
+  .jacketLayer { transition: none; }
+  .root { transition: none; }
   .swatch { transition: none; }
 }
