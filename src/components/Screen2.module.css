@@ -22,7 +22,7 @@
    400vh would double the speed and the sequence would blur past. */
 .track {
   position: relative;
-  height: 1300vh;
+  height: 1500vh;
 }
 
 /* everything the viewer sees, pinned while the runway scrolls past */

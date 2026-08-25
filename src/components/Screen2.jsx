@@ -19,8 +19,12 @@ const W6_IN           = 0.68   // second whiteout starts covering the sequence
 const W6_PEAK         = 0.78   // solid white — sequence out, screen 6 in behind it
 const W6_OUT          = 0.88   // white gone — screen 6 is already at full size by now
 const S6_IN           = 0.78   // screen 6 appears, already at full layout
-const JACKET_FULL     = 0.92   // the jacket alone finishes growing here
+const JACKET_FULL     = 0.86   // the jacket alone finishes growing here
 const JACKET_FROM     = 0.55   // the jacket alone starts this small
+// 0.86 - 0.90 is a rest beat: nothing moves on scroll, so the float is seen.
+const S7_IN           = 0.90   // screen 6 starts clearing out (figma Variant7)
+const S7_OUT          = 1.00   // only nav + shrunken shirt remain
+const JACKET_END      = 0.614  // 246/401 — the shirt's size in Variant7
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -81,9 +85,20 @@ export default function Screen2({ onBack }) {
       s6.style.opacity = shown ? '1' : '0'
       s6.style.pointerEvents = shown ? 'auto' : 'none'
       const jp = range(p, S6_IN, JACKET_FULL)
-      s6.style.setProperty('--s6-jacket-scale', String(JACKET_FROM + (1 - JACKET_FROM) * jp))
-      // the float only starts once the jacket has reached its proper size
-      s6.style.setProperty('--s6-float', jp >= 1 ? 'running' : 'paused')
+
+      // 7. screen 6 clears out — headline and copy fade, clouds rise away,
+      //    swatches slide off left, and the shirt shrinks and lifts. Each of
+      //    those reads --s7 in CSS; only the shirt's scale is folded in here,
+      //    since it has to compose with the arrival scale on one transform.
+      const s7 = range(p, S7_IN, S7_OUT)
+      s6.style.setProperty('--s7', String(s7))
+
+      const arrive = JACKET_FROM + (1 - JACKET_FROM) * jp
+      const exit = 1 + (JACKET_END - 1) * s7
+      s6.style.setProperty('--s6-jacket-scale', String(arrive * exit))
+
+      // float once the jacket is at its proper size, but stop it while it leaves
+      s6.style.setProperty('--s6-float', jp >= 1 && s7 === 0 ? 'running' : 'paused')
     }
 
     // Cancel-and-requeue rather than an `if (!raf)` guard: a frame queued while

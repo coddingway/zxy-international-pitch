@@ -29,7 +29,9 @@ export default function Screen6({ onBack }) {
       <h1 className={styles.headline}>{'The Future Wears\nMany Worlds'}</h1>
 
       {/* Cloud 2 behind the jacket */}
-      <img src="/cloud-1.png" alt="" className={styles.cloud2} />
+      <div className={styles.cloudBack}>
+        <img src="/cloud-1.png" alt="" className={styles.cloud2} />
+      </div>
 
       <div className={styles.jacketWrap}>
         <div className={styles.jacketFloat}>
@@ -46,7 +48,9 @@ export default function Screen6({ onBack }) {
       </div>
 
       {/* Cloud 1 in front of the jacket — this is what dissolves its lower left */}
-      <img src="/cloud-1.png" alt="" className={styles.cloud1} />
+      <div className={styles.cloudFront}>
+        <img src="/cloud-1.png" alt="" className={styles.cloud1} />
+      </div>
 
       <p className={styles.copy}>
         An apparel solutions partner shaping the future across lifestyle, sportswear, home and workwear.
