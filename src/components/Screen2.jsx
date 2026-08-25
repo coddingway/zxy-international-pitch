@@ -41,9 +41,11 @@ const VIDEO_WARM      = 0.42
 // with its swatches in place.
 const S6_REST         = (JACKET_FULL + S7_IN) / 2
 const ZOOM_LETTER     = 'e'    // the glyph the camera flies through
-// The wordmark fades as the camera flies into it, reaching 0 exactly as the
-// scene hands off to the sequence and the white is already solid.
-const BRAND_FADE_IN   = 0.02
+// The wordmark dissolves the instant the scroll starts, and quickly — it is
+// gone by the time the camera has zoomed ~2.7x, well before the whiteout at
+// 0.125, so the dissolve reads as part of the push-in rather than trailing it.
+const BRAND_FADE_IN   = 0
+const BRAND_FADE_OUT  = 0.06
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -179,7 +181,7 @@ export default function Screen2({ onBack }) {
       scene.style.transform = `scale(${1 + (ZOOM_SCALE - 1) * z * z})`
 
       // the wordmark fades out as we fly into it
-      brandWrap.style.opacity = String(1 - range(p, BRAND_FADE_IN, SWAP))
+      brandWrap.style.opacity = String(1 - range(p, BRAND_FADE_IN, BRAND_FADE_OUT))
 
       // start buffering screen 7's videos once the sequence is well underway
       if (p >= VIDEO_WARM) warm ||= (setWarmVideos(true), true)
