@@ -36,7 +36,7 @@
   width: 72.5vw;             /* 1044/1440 */
   height: 54.306vw;          /* 782/1440 */
   pointer-events: none;
-  animation: s6drift2 64s ease-in-out infinite alternate;
+  animation: s6drift2 18s ease-in-out infinite alternate;
 }
 
 .jacket {
@@ -57,17 +57,21 @@
   width: 58.681vw;           /* 845/1440 */
   height: 43.958vw;          /* 633/1440 */
   pointer-events: none;
-  animation: s6drift1 48s ease-in-out infinite alternate;
+  animation: s6drift1 14s ease-in-out infinite alternate;
 }
 
+/* ~10px/s and ~6px/s at a 1440 viewport. The earlier 4vw/48s worked out at
+   about 1px per second, which reads as static. Amplitudes are kept small enough
+   that cloud 1 still overlaps the jacket's lower left at full drift, since that
+   overlap is what dissolves it. */
 @keyframes s6drift1 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(4vw, -1vw, 0); }
+  to   { transform: translate3d(10vw, -1.5vw, 0); }
 }
 
 @keyframes s6drift2 {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-3.5vw, 1vw, 0); }
+  to   { transform: translate3d(-8vw, 1.2vw, 0); }
 }
 
 .copy {
