@@ -1,0 +1,127 @@
+/* Figma frame 1440×907. Positions are expressed as fractions of that width (vw)
+   so the whole composition scales as one image, matching screens 1–5. */
+
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(to bottom, var(--s6-from) 0%, var(--s6-via) 53.846%, #fff 100%);
+}
+
+/* headline sits BEHIND the jacket — "Many Worlds" is partly occluded by it,
+   which is the point of the composition */
+.headline {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 9.999vw;              /* 144/1440 */
+  width: 66.875vw;           /* 963/1440 */
+  margin: 0;
+  font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
+  font-weight: var(--s6-weight);
+  font-size: 6.944vw;        /* 100/1440 */
+  line-height: 1;
+  text-align: center;
+  color: var(--s6-ink);
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+/* Cloud 2 behind the jacket, Cloud 1 in front — that ordering is what makes the
+   jacket dissolve into cloud at its lower left. */
+.cloud2 {
+  position: absolute;
+  left: 43.889vw;            /* 632/1440 */
+  top: 25.625vw;             /* 369/1440 */
+  width: 72.5vw;             /* 1044/1440 */
+  height: 54.306vw;          /* 782/1440 */
+  pointer-events: none;
+  animation: s6drift2 64s ease-in-out infinite alternate;
+}
+
+.jacket {
+  position: absolute;
+  left: 36.111vw;            /* 520/1440 */
+  top: 20.069vw;             /* 289/1440 */
+  width: 27.847vw;           /* 401/1440 */
+  height: var(--s6-jacket-h);
+  object-fit: contain;
+  object-position: bottom;
+  pointer-events: none;
+}
+
+.cloud1 {
+  position: absolute;
+  left: 1.25vw;              /* 18/1440 */
+  top: 34.861vw;             /* 502/1440 */
+  width: 58.681vw;           /* 845/1440 */
+  height: 43.958vw;          /* 633/1440 */
+  pointer-events: none;
+  animation: s6drift1 48s ease-in-out infinite alternate;
+}
+
+@keyframes s6drift1 {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(4vw, -1vw, 0); }
+}
+
+@keyframes s6drift2 {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-3.5vw, 1vw, 0); }
+}
+
+.copy {
+  position: absolute;
+  left: 71.597vw;            /* 1031/1440 */
+  top: 49.583vw;             /* 714/1440 */
+  width: 19.028vw;           /* 274/1440 */
+  margin: 0;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.972vw;        /* 14/1440 */
+  font-weight: 400;
+  line-height: 1.6;
+  color: #353535;
+}
+
+/* swatch pill — built from the pink variant, which exposes it as real layers
+   rather than the flattened SVG the blue variant exports */
+.swatches {
+  position: absolute;
+  left: 9.375vw;             /* 135/1440 */
+  top: 52.153vw;             /* 751/1440 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: #fff;
+  border: 0.5px solid #d2e6ee;
+  border-radius: 100px;
+  box-shadow: 0 8px 5px rgba(7, 39, 51, 0.09);
+}
+
+.swatch {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background: var(--dot);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.swatch:hover { transform: scale(1.12); }
+
+.swatchActive {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--dot);
+}
+
+.swatch:focus-visible {
+  outline: 2px solid #353535;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud1, .cloud2 { animation: none; }
+  .swatch { transition: none; }
+}
