@@ -41,6 +41,9 @@ const VIDEO_WARM      = 0.42
 // with its swatches in place.
 const S6_REST         = (JACKET_FULL + S7_IN) / 2
 const ZOOM_LETTER     = 'e'    // the glyph the camera flies through
+// The wordmark fades as the camera flies into it, reaching 0 exactly as the
+// scene hands off to the sequence and the white is already solid.
+const BRAND_FADE_IN   = 0.02
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -59,6 +62,7 @@ export default function Screen2({ onBack }) {
   const cueRef    = useRef(null)
   const trackRef  = useRef(null)
   const brandRef  = useRef(null)
+  const brandWrapRef = useRef(null)
   const lenisRef  = useRef(null)
 
   // Aim the zoom at ZOOM_LETTER in the wordmark, so the scene flies through that
@@ -75,9 +79,14 @@ export default function Screen2({ onBack }) {
       if (dead) return
       const text = brand.firstChild
       if (!text || text.nodeType !== 3) return
-      // measure unscaled — on a resize mid-scroll the scene is mid-zoom
+      // measure unscaled — the scene may be mid-zoom, and the wordmark may be
+      // mid-reveal with its own transform, either of which would skew the glyph
       const prev = scene.style.transform
+      const prevBrand = brand.style.transform
+      const prevAnim = brand.style.animation
       scene.style.transform = 'none'
+      brand.style.animation = 'none'
+      brand.style.transform = 'none'
       const box = scene.getBoundingClientRect()
       const str = text.textContent
       let best = null
@@ -96,6 +105,8 @@ export default function Screen2({ onBack }) {
         if (!best || d < best.d) best = { d, x, y }
       }
       scene.style.transform = prev
+      brand.style.transform = prevBrand
+      brand.style.animation = prevAnim
       if (!best) return
       scene.style.transformOrigin =
         `${((best.x - box.left) / box.width) * 100}% ${((best.y - box.top) / box.height) * 100}%`
@@ -116,6 +127,7 @@ export default function Screen2({ onBack }) {
     const white6 = white6Ref.current
     const s7El = s7Ref.current
     const cue = cueRef.current
+    const brandWrap = brandWrapRef.current
     const stage = scroller.querySelector(`.${styles.stage}`)
     let holdTimer = 0
     let s7Shown = false
@@ -165,6 +177,9 @@ export default function Screen2({ onBack }) {
       // 1. camera pushes into the field — accelerating, so it reads as a descent
       const z = range(p, 0, ZOOM_END)
       scene.style.transform = `scale(${1 + (ZOOM_SCALE - 1) * z * z})`
+
+      // the wordmark fades out as we fly into it
+      brandWrap.style.opacity = String(1 - range(p, BRAND_FADE_IN, SWAP))
 
       // start buffering screen 7's videos once the sequence is well underway
       if (p >= VIDEO_WARM) warm ||= (setWarmVideos(true), true)
@@ -283,7 +298,9 @@ export default function Screen2({ onBack }) {
             <img src="/field-top.png" alt="" className={styles.field} />
 
             {/* Brand name — above the field, below the clouds */}
-            <p ref={brandRef} className={styles.brand}>ZXY International</p>
+            <div ref={brandWrapRef} className={styles.brandWrap}>
+              <p ref={brandRef} className={styles.brand}>ZXY International</p>
+            </div>
 
             {/* Clouds drift above the field. Cloud 3 reuses Cloud 1's bitmap (as in Figma). */}
             <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud1}`} />
