@@ -12,18 +12,31 @@ export function createFrameSequence({ canvas, count, url, onProgress }) {
   let lastIndex = -1
   let disposed = false
 
-  for (let i = 0; i < count; i++) {
+  // Load in scroll order with limited concurrency. Firing all N requests at once
+  // saturates the connection pool, so the tail of the sequence starves — the
+  // frames you reach last are the ones that arrive last. A small window keeps
+  // the browser working strictly front-to-back, which is the order they're needed.
+  const CONCURRENCY = 8
+  let next = 0
+
+  function pump() {
+    if (disposed || next >= count) return
+    const i = next++
     const img = new Image()
     img.decoding = 'async'
-    img.src = url(i + 1)
-    img.onload = () => {
+    frames[i] = img
+    const done = () => {
       loaded++
       onProgress?.(loaded / count)
-      // first frame in: paint something immediately
-      if (lastIndex === -1) draw(0)
+      if (lastIndex === -1) draw(0) // first frame in: paint something immediately
+      pump()
     }
-    frames[i] = img
+    img.onload = done
+    img.onerror = done // a gap must not stall the queue; draw() skips back instead
+    img.src = url(i + 1)
   }
+
+  for (let k = 0; k < Math.min(CONCURRENCY, count); k++) pump()
 
   const ready = img => img && img.complete && img.naturalWidth > 0
 
@@ -71,7 +84,7 @@ export function createFrameSequence({ canvas, count, url, onProgress }) {
     draw,
     dispose() {
       disposed = true
-      for (const img of frames) { img.onload = null; img.src = '' }
+      for (const img of frames) { if (img) { img.onload = null; img.onerror = null; img.src = '' } }
     },
   }
 }

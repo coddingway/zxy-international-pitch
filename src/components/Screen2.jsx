@@ -10,15 +10,11 @@ import { createFrameSequence } from '../lib/frameSequence.js'
 // frame-by-frame by the remaining scroll. Nothing ever auto-plays.
 const ZOOM_END        = 0.35   // scene finishes its zoom
 const ZOOM_SCALE      = 2.4
-// Must stay in ascending order: WHITE_IN < SWAP < WHITE_OUT. White is
-// range(p, WHITE_IN, SWAP) - range(p, SWAP, WHITE_OUT), so if SWAP drops below
-// WHITE_IN the first range runs backwards and pins white at 1 from p=0 — the
-// field is then never visible.
 const WHITE_IN        = 0.26   // white starts covering
-const SWAP            = 0.40   // white is solid: scene out, sequence in
-const WHITE_OUT       = 0.54   // white fully gone, sequence exposed
+const SWAP            = 0.40   // white is solid: scene out, video in
+const WHITE_OUT       = 0.54   // white fully gone, video exposed
 const CUE_OUT         = 0.12   // scroll cue fades once scrolling starts
-const FRAME_COUNT     = 192    // public/cotton-seq/frame_001..192.jpg
+const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
 const range = (v, a, b) => clamp01((v - a) / (b - a))
