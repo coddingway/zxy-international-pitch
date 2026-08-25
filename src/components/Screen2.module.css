@@ -156,15 +156,13 @@
   .cloud3 { transform: translate3d(33.681vw, 0, 0); }
 }
 
-/* Screen 6 overlay — scaled from the centre by scroll, above everything except
-   the whiteout. It carries its own nav and globe badge. */
+/* Screen 6 overlay — arrives at full layout, above everything except the
+   whiteout. Only the jacket inside it scales (see --s6-jacket-scale). It
+   carries its own nav and globe badge. */
 .screen6 {
   position: absolute;
   inset: 0;
-  transform-origin: center center;
-  transform: scale(0.28);
   opacity: 0;
-  will-change: transform;
   z-index: 15;
 }
 

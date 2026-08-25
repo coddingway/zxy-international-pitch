@@ -19,9 +19,9 @@ const SEQ_END         = 0.74   // sequence reaches its last frame (screen 5)
 const W6_IN           = 0.68   // second whiteout starts covering the sequence
 const W6_PEAK         = 0.78   // solid white — sequence out, screen 6 in behind it
 const W6_OUT          = 0.88   // white gone — screen 6 is already at full size by now
-const S6_IN           = 0.78   // screen 6 starts settling up from centre
-const S6_FULL         = 0.85   // reaches full size while still under white
-const S6_FROM_SCALE   = 0.82   // a gentle settle, not a zoom from a small card
+const S6_IN           = 0.78   // screen 6 appears, already at full layout
+const JACKET_FULL     = 0.92   // the jacket alone finishes growing here
+const JACKET_FROM     = 0.55   // the jacket alone starts this small
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -79,11 +79,13 @@ export default function Screen2({ onBack }) {
       //    than against the frozen last frame of the sequence
       white6.style.opacity = String(range(p, W6_IN, W6_PEAK))
 
-      // 6. screen 6 zooms up from the centre and fills the viewport
-      const s6p = range(p, S6_IN, S6_FULL)
-      s6.style.opacity = s6p > 0 ? '1' : '0'
-      s6.style.pointerEvents = s6p >= 1 ? 'auto' : 'none'
-      s6.style.transform = `scale(${S6_FROM_SCALE + (1 - S6_FROM_SCALE) * s6p})`
+      // 6. screen 6 arrives at full layout — only the jacket grows, via a CSS var
+      //    the component reads, so nothing here re-renders React.
+      const shown = p >= S6_IN
+      s6.style.opacity = shown ? '1' : '0'
+      s6.style.pointerEvents = shown ? 'auto' : 'none'
+      const jp = range(p, S6_IN, JACKET_FULL)
+      s6.style.setProperty('--s6-jacket-scale', String(JACKET_FROM + (1 - JACKET_FROM) * jp))
     }
 
     // Cancel-and-requeue rather than an `if (!raf)` guard: a frame queued while

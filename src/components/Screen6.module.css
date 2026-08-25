@@ -48,6 +48,11 @@
   object-fit: contain;
   object-position: bottom;
   pointer-events: none;
+  /* only the jacket grows on arrival — the rest of the screen is already in
+     place. Driven by Screen2's scroll handler; defaults to 1 when standalone. */
+  transform: scale(var(--s6-jacket-scale, 1));
+  transform-origin: center center;
+  will-change: transform;
 }
 
 .cloud1 {
