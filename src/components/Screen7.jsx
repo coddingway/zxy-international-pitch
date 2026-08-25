@@ -32,6 +32,7 @@ export default function Screen7({ onBackToTop }) {
         />
       ))}
 
+      <div className={styles.artboard}>
       <div className={styles.title}>
         <h2 className={styles.titleBig}>{'Four\nWorlds'}</h2>
         <p className={styles.titleSub}>
@@ -54,11 +55,12 @@ export default function Screen7({ onBackToTop }) {
         ))}
       </div>
 
-      <Nav />
-
       <button type="button" className={styles.up} onClick={onBackToTop} aria-label="Back to top">
         <img src={arrowDown} alt="" className={styles.upIcon} />
       </button>
+      </div>
+
+      <Nav />
     </div>
   )
 }

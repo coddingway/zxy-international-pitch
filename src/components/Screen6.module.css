@@ -1,14 +1,10 @@
 /* Registered so they interpolate: an unregistered custom property inside a
-   linear-gradient jumps between values, it does not transition. With @property
-   the browser knows they are colours and can tween them, so the whole theme
-   crossfades with the shirt. */
+   linear-gradient jumps between values, it does not transition. */
 @property --s6-from { syntax: '<color>'; inherits: true; initial-value: #dff6ff; }
 @property --s6-via  { syntax: '<color>'; inherits: true; initial-value: #bfeeff; }
 @property --s6-ink  { syntax: '<color>'; inherits: true; initial-value: #88daf9; }
 
-/* Figma frame 1440×907. Positions are expressed as fractions of that width (vw)
-   so the whole composition scales as one image, matching screens 1–5. */
-
+/* Background fills the viewport at any size. */
 .root {
   position: absolute;
   inset: 0;
@@ -17,18 +13,31 @@
   transition: --s6-from 0.55s ease, --s6-via 0.55s ease, --s6-ink 0.55s ease;
 }
 
-/* headline sits BEHIND the jacket — "Many Worlds" is partly occluded by it,
-   which is the point of the composition */
+/* The composition is a fixed 1440x907 artboard, scaled to fit and centred, so
+   everything inside can use the Figma pixel values directly and nothing can fall
+   off the bottom. Positioning vertically in vw scaled with WIDTH, which pushed
+   the swatches below the fold on any viewport wider than 1.588:1 — and browser
+   chrome makes that most desktops. --fit is set by Screen2 on resize. */
+.artboard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1440px;
+  height: 907px;
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  transform-origin: center center;
+}
+
 .headline {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: 9.999vw;              /* 144/1440 */
-  width: 66.875vw;           /* 963/1440 */
+  top: 144px;
+  width: 963px;
   margin: 0;
   font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
   font-weight: 800;
-  font-size: 6.944vw;        /* 100/1440 */
+  font-size: 100px;
   line-height: 1;
   text-align: center;
   color: var(--s6-ink);
@@ -37,18 +46,10 @@
   opacity: calc(1 - var(--s7, 0));
 }
 
-/* Cloud 2 behind the jacket, Cloud 1 in front — that ordering is what makes the
-   jacket dissolve into cloud at its lower left. */
-
-/* The clouds already own `transform` for their crossing loop, so the exit slide
-   lives on these wrappers. Two of them rather than one, because the jacket sits
-   between the clouds and that layering is what dissolves it.
-
-   Each leaves by its nearest edge: cloud 2 (right of centre) exits right,
-   cloud 1 (left of centre) exits left. The distances are sized to clear the
-   viewport from ANY point in the crossing loop, not just from the Figma resting
-   position — cloud 1 can be as far right as 100vw when the exit begins, so it
-   needs 100 + its own 58.681vw width to be fully gone. */
+/* The clouds own `transform` for their crossing loop, so the exit slide lives on
+   these wrappers. Two rather than one, because the jacket sits between the
+   clouds and that layering is what dissolves it. Each leaves by its nearest
+   edge, far enough to clear from ANY point in the crossing loop. */
 .cloudBack,
 .cloudFront {
   position: absolute;
@@ -57,45 +58,53 @@
   opacity: calc(1 - var(--s7, 0));
 }
 
-.cloudBack  { transform: translate3d(calc( 175vw * var(--s7, 0)), 0, 0); }
-.cloudFront { transform: translate3d(calc(-160vw * var(--s7, 0)), 0, 0); }
-
-/* Clouds cross the full viewport and wrap, like screen 2. Each starts just off
-   one edge and ends just off the other, so the wrap happens fully out of frame.
-   Cloud 1 travels left→right, cloud 2 right→left, so they cross mid-screen.
-   Periods are non-harmonic (55/70) so the crossings never repeat a pattern.
-
-   The negative delays are the exact point in each cycle where the cloud sits at
-   its Figma left offset, so the first painted frame is the Figma composition. */
+.cloudBack  { transform: translate3d(calc( 2484px * var(--s7, 0)), 0, 0); }
+.cloudFront { transform: translate3d(calc(-2285px * var(--s7, 0)), 0, 0); }
 
 .cloud2 {
   position: absolute;
   left: 0;
-  top: 25.625vw;             /* 369/1440 */
-  width: 72.5vw;             /* 1044/1440 */
-  height: 54.306vw;          /* 782/1440 */
+  top: 369px;
+  width: 1044px;
+  height: 782px;
   pointer-events: none;
   animation: s6CrossLeft 70s linear infinite;
-  animation-delay: -22.77s;  /* = Figma left 43.889vw */
+  animation-delay: -22.77s;  /* = Figma left 632px */
 }
 
+.cloud1 {
+  position: absolute;
+  left: 0;
+  top: 502px;
+  width: 845px;
+  height: 633px;
+  pointer-events: none;
+  animation: s6CrossRight 55s linear infinite;
+  animation-delay: -20.77s;  /* = Figma left 18px */
+}
+
+/* start offsets equal each cloud's own width, so it begins fully off-frame */
+@keyframes s6CrossRight {
+  from { transform: translate3d(-845px, 0, 0); }
+  to   { transform: translate3d(1440px, 0, 0); }
+}
+
+@keyframes s6CrossLeft {
+  from { transform: translate3d(1440px, 0, 0); }
+  to   { transform: translate3d(-1044px, 0, 0); }
+}
 
 /* Three elements, three jobs — transform is a single property, so scale and
    float cannot share an element, and the crossfade needs its own layers.
-   wrap = scale, float = translateY, layers = opacity.
-   Sits between the clouds in source order: cloud 2 behind it, cloud 1 in front,
-   which is what dissolves the jacket's lower left. */
+   wrap = scale + exit lift, float = translateY, layers = opacity. */
 .jacketWrap {
   position: absolute;
-  left: 36.111vw;            /* 520/1440 */
-  top: 20.069vw;             /* 289/1440 */
-  width: 27.847vw;           /* 401/1440 */
-  height: 36.736vw;          /* tallest variant (529) so swapping never reflows */
+  left: 520px;
+  top: 289px;
+  width: 401px;
+  height: 529px;
   pointer-events: none;
-  /* only the jacket grows on arrival — the rest of the screen is already in
-     place. Driven by Screen2's scroll handler; defaults to 1 when standalone. */
-  /* translate before scale, so the offset stays in unscaled units */
-  transform: translate3d(0, calc(-13.757vw * var(--s7, 0)), 0) scale(var(--s6-jacket-scale, 1));
+  transform: translate3d(0, calc(-198px * var(--s7, 0)), 0) scale(var(--s6-jacket-scale, 1));
   transform-origin: center center;
   will-change: transform;
 }
@@ -103,14 +112,13 @@
 .jacketFloat {
   position: absolute;
   inset: 0;
-  /* 1200ms hold, 5000ms ease-out up, 1200ms hold, 5000ms ease-out back:
-     a 12.4s cycle. Held paused until the jacket has finished growing. */
+  /* 1200ms hold, 5000ms ease-out up, 1200ms hold, 5000ms ease-out back. */
   animation: jacketFloat 12.4s infinite;
   animation-play-state: var(--s6-float, running);
   will-change: transform;
 }
 
-/* all three are mounted and crossfade, so a switch never waits on a download */
+/* all three mounted and crossfading, so a switch never waits on a download */
 .jacketLayer {
   position: absolute;
   left: 0;
@@ -126,54 +134,29 @@
 .jacketOn { opacity: 1; }
 
 @keyframes jacketFloat {
-  0%,     9.677% { transform: translateY(0);        animation-timing-function: ease-out; }
-  50%,   59.677% { transform: translateY(-2.778vw); animation-timing-function: ease-out; }
+  0%,     9.677% { transform: translateY(0);     animation-timing-function: ease-out; }
+  50%,   59.677% { transform: translateY(-40px); animation-timing-function: ease-out; }
   100%           { transform: translateY(0); }
-}
-
-.cloud1 {
-  position: absolute;
-  left: 0;
-  top: 34.861vw;             /* 502/1440 */
-  width: 58.681vw;           /* 845/1440 */
-  height: 43.958vw;          /* 633/1440 */
-  pointer-events: none;
-  animation: s6CrossRight 55s linear infinite;
-  animation-delay: -20.77s;  /* = Figma left 1.25vw */
-}
-
-/* ~41px/s and ~36px/s at a 1440 viewport. Start offsets equal each cloud's own
-   width, so it begins fully off-frame. */
-@keyframes s6CrossRight {
-  from { transform: translate3d(-58.681vw, 0, 0); }
-  to   { transform: translate3d(100vw, 0, 0); }
-}
-
-@keyframes s6CrossLeft {
-  from { transform: translate3d(100vw, 0, 0); }
-  to   { transform: translate3d(-72.5vw, 0, 0); }
 }
 
 .copy {
   position: absolute;
-  left: 71.597vw;            /* 1031/1440 */
-  top: 49.583vw;             /* 714/1440 */
-  width: 19.028vw;           /* 274/1440 */
+  left: 1031px;
+  top: 714px;
+  width: 274px;
   margin: 0;
   font-family: 'Hanken Grotesk', sans-serif;
-  font-size: 0.972vw;        /* 14/1440 */
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.6;
   color: #353535;
   opacity: calc(1 - var(--s7, 0));
 }
 
-/* swatch pill — built from the pink variant, which exposes it as real layers
-   rather than the flattened SVG the blue variant exports */
 .swatches {
   position: absolute;
-  left: 9.375vw;             /* 135/1440 */
-  top: 52.153vw;             /* 751/1440 */
+  left: 135px;
+  top: 751px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -182,7 +165,7 @@
   border: 0.5px solid #d2e6ee;
   border-radius: 100px;
   box-shadow: 0 8px 5px rgba(7, 39, 51, 0.09);
-  transform: translate3d(calc(-15vw * var(--s7, 0)), 0, 0);
+  transform: translate3d(calc(-216px * var(--s7, 0)), 0, 0);
   opacity: calc(1 - var(--s7, 0));
 }
 
@@ -199,14 +182,9 @@
 
 .swatch:hover { transform: scale(1.12); }
 
-.swatchActive {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--dot);
-}
+.swatchActive { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--dot); }
 
-.swatch:focus-visible {
-  outline: 2px solid #353535;
-  outline-offset: 3px;
-}
+.swatch:focus-visible { outline: 2px solid #353535; outline-offset: 3px; }
 
 @media (prefers-reduced-motion: reduce) {
   .cloud1, .cloud2, .jacketFloat { animation: none; }

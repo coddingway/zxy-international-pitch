@@ -55,6 +55,7 @@ export default function Screen2({ onBack }) {
     const white6 = white6Ref.current
     const s7El = s7Ref.current
     const cue = cueRef.current
+    const stage = scroller.querySelector(`.${styles.stage}`)
     let holdTimer = 0
     let s7Shown = false
     let raf = 0
@@ -67,6 +68,10 @@ export default function Screen2({ onBack }) {
 
     const apply = () => {
       raf = 0
+      // Scale factor for the fixed 1440x907 artboards inside screens 6 and 7.
+      // `contain`, so the whole composition is always on screen whatever the
+      // viewport aspect — the background layers fill independently behind it.
+      stage.style.setProperty('--fit', String(Math.min(innerWidth / 1440, innerHeight / 907)))
       const span = scroller.scrollHeight - scroller.clientHeight
       const p = span > 0 ? clamp01(scroller.scrollTop / span) : 0
 

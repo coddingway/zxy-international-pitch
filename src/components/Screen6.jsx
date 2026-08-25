@@ -26,6 +26,7 @@ export default function Screen6({ onBack }) {
       className={styles.root}
       style={{ '--s6-from': t.from, '--s6-via': t.via, '--s6-ink': t.ink }}
     >
+      <div className={styles.artboard}>
       <h1 className={styles.headline}>{'The Future Wears\nMany Worlds'}</h1>
 
       {/* Cloud 2 behind the jacket */}
@@ -68,6 +69,8 @@ export default function Screen6({ onBack }) {
             onClick={() => setTheme(name)}
           />
         ))}
+      </div>
+
       </div>
 
       <Nav />
