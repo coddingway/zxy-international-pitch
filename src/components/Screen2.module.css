@@ -78,6 +78,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 18;
+  opacity: 0;                /* hidden on screen 2; syncCue turns it on at SWAP */
   transition: opacity 0.5s ease;
 }
 

@@ -120,6 +120,7 @@ export default function Screen2({ onBack }) {
     let holdTimer = 0
     let s7Shown = false
     let warm = false
+    let lastP = 0
     let raf = 0
 
     // Smooth scrolling for the whole runway. The scroller is a div rather than
@@ -144,6 +145,13 @@ export default function Screen2({ onBack }) {
       url: n => `/cotton-seq/frame_${String(n).padStart(3, '0')}.jpg`,
     })
 
+    // The cue only makes sense once there is sequence left to scroll through:
+    // off while flying through the wordmark, on from screen 3, off again once
+    // four worlds lands and the runway is spent.
+    const syncCue = () => {
+      cue.style.opacity = lastP >= SWAP && !s7Shown ? '1' : '0'
+    }
+
     const apply = () => {
       raf = 0
       // Scale factor for the fixed 1440x907 artboards inside screens 6 and 7.
@@ -152,6 +160,7 @@ export default function Screen2({ onBack }) {
       stage.style.setProperty('--fit', String(Math.min(innerWidth / 1440, innerHeight / 907)))
       const span = scroller.scrollHeight - scroller.clientHeight
       const p = span > 0 ? clamp01(scroller.scrollTop / span) : 0
+      lastP = p
 
       // 1. camera pushes into the field — accelerating, so it reads as a descent
       const z = range(p, 0, ZOOM_END)
@@ -172,6 +181,8 @@ export default function Screen2({ onBack }) {
 
       // 4. scrub — scroll position IS the playhead
       if (onSeq) seq.draw(range(p, SWAP, SEQ_END))
+
+      syncCue()
 
       // 5. white backdrop sits behind screen 6, so it zooms against white rather
       //    than against the frozen last frame of the sequence
@@ -210,7 +221,7 @@ export default function Screen2({ onBack }) {
             s7El.style.pointerEvents = 'auto'
             setS7Visible(true)
             // four worlds is the end of the runway — nothing left to scroll to
-            cue.style.opacity = '0'
+            syncCue()
           }, S7_HOLD_MS)
         }
       } else {
@@ -220,7 +231,7 @@ export default function Screen2({ onBack }) {
           s7El.style.opacity = '0'
           s7El.style.pointerEvents = 'none'
           setS7Visible(false)
-          cue.style.opacity = '1'
+          syncCue()
         }
       }
     }

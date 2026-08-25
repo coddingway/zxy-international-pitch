@@ -222,12 +222,19 @@ export default function Globe({ size = 648, onAnchorClick, interactive = true })
   }
 
   return (
-    <div ref={rootRef} style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+    // Hover lives on this wrapper, not on the canvas: the labels are a sibling
+    // overlay with pointer-events, so moving onto a label used to leave the
+    // canvas, fire resume, and spin the globe away from under the label you
+    // were reaching for.
+    <div
+      ref={rootRef}
+      onMouseEnter={interactive ? pause : undefined}
+      onMouseLeave={interactive ? resume : undefined}
+      style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}
+    >
       {/* Canvas — clipped to circle */}
       <div
         ref={mountRef}
-        onMouseEnter={interactive ? pause : undefined}
-        onMouseLeave={interactive ? resume : undefined}
         style={{
           width: size, height: size, borderRadius: '50%', overflow: 'hidden',
           cursor: interactive ? 'grab' : 'default',
