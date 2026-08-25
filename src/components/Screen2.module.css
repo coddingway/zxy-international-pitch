@@ -34,7 +34,9 @@
   overflow: hidden;
 }
 
-/* field + clouds, zoomed as one unit */
+/* Field, wordmark and clouds, zoomed as one unit. transform-origin is set from
+   JS to the "n" of the wordmark, so the zoom converges on that letter; the
+   centre here is only the fallback before the glyph has been measured. */
 .scene {
   position: absolute;
   inset: 0;

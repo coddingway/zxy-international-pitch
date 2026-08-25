@@ -12,7 +12,9 @@ import { createFrameSequence } from '../lib/frameSequence.js'
 // The scene zooms into the field, white takes over, then the video is scrubbed
 // frame-by-frame by the remaining scroll. Nothing ever auto-plays.
 const ZOOM_END        = 0.35   // scene finishes its zoom
-const ZOOM_SCALE      = 2.4
+// Big enough that the letter grows past the viewport and we pass through it —
+// the "n" is white, so filling the screen with it IS the start of the whiteout.
+const ZOOM_SCALE      = 14
 const WHITE_IN        = 0.26   // white starts covering
 const SWAP            = 0.40   // white is solid: scene out, video in
 const WHITE_OUT       = 0.54   // white fully gone, video exposed
@@ -53,7 +55,53 @@ export default function Screen2({ onBack }) {
   const s7Ref     = useRef(null)
   const cueRef    = useRef(null)
   const trackRef  = useRef(null)
+  const brandRef  = useRef(null)
   const lenisRef  = useRef(null)
+
+  // Aim the zoom at the "n" of the wordmark, so the scene flies through that
+  // letter rather than the middle of the frame. Measured from the live glyph
+  // with a Range rather than hardcoded: the font is sized in vw, so the letter
+  // moves with the viewport, and a guessed coordinate would drift.
+  useEffect(() => {
+    const brand = brandRef.current
+    const scene = sceneRef.current
+    if (!brand || !scene) return
+    let dead = false
+
+    const place = () => {
+      if (dead) return
+      const text = brand.firstChild
+      if (!text || text.nodeType !== 3) return
+      // measure unscaled — on a resize mid-scroll the scene is mid-zoom
+      const prev = scene.style.transform
+      scene.style.transform = 'none'
+      const box = scene.getBoundingClientRect()
+      const str = text.textContent
+      let best = null
+      for (let i = 0; i < str.length; i++) {
+        if (str[i] !== 'n') continue
+        const range = document.createRange()
+        range.setStart(text, i)
+        range.setEnd(text, i + 1)
+        const g = range.getBoundingClientRect()
+        // the left stem of an "n" is solid white; its centre is the open arch,
+        // which would show field through the gap as we fly in
+        const x = g.left + g.width * 0.18
+        const y = g.top + g.height * 0.62
+        const d = Math.abs(x - (box.left + box.width / 2))
+        if (!best || d < best.d) best = { d, x, y }
+      }
+      scene.style.transform = prev
+      if (!best) return
+      scene.style.transformOrigin =
+        `${((best.x - box.left) / box.width) * 100}% ${((best.y - box.top) / box.height) * 100}%`
+    }
+
+    place()
+    document.fonts?.ready?.then(place).catch(() => {})
+    window.addEventListener('resize', place)
+    return () => { dead = true; window.removeEventListener('resize', place) }
+  }, [])
 
   useEffect(() => {
     const scroller = scrollRef.current
@@ -220,7 +268,7 @@ export default function Screen2({ onBack }) {
             <img src="/field-top.png" alt="" className={styles.field} />
 
             {/* Brand name — above the field, below the clouds */}
-            <p className={styles.brand}>ZXY International</p>
+            <p ref={brandRef} className={styles.brand}>ZXY International</p>
 
             {/* Clouds drift above the field. Cloud 3 reuses Cloud 1's bitmap (as in Figma). */}
             <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud1}`} />
