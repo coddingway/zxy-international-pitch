@@ -18,10 +18,10 @@ const CUE_OUT         = 0.12   // scroll cue fades once scrolling starts
 const SEQ_END         = 0.74   // sequence reaches its last frame (screen 5)
 const W6_IN           = 0.68   // second whiteout starts covering the sequence
 const W6_PEAK         = 0.78   // solid white — sequence out, screen 6 in behind it
-const W6_OUT          = 0.86   // white gone, screen 6 revealed mid-zoom
-const S6_IN           = 0.78   // screen 6 starts zooming up from centre
-const S6_FULL         = 0.94   // screen 6 fills the viewport
-const S6_FROM_SCALE   = 0.28   // how small it starts
+const W6_OUT          = 0.88   // white gone — screen 6 is already at full size by now
+const S6_IN           = 0.78   // screen 6 starts settling up from centre
+const S6_FULL         = 0.85   // reaches full size while still under white
+const S6_FROM_SCALE   = 0.82   // a gentle settle, not a zoom from a small card
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
