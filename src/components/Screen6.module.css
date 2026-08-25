@@ -38,22 +38,31 @@
 
 /* Cloud 2 behind the jacket, Cloud 1 in front — that ordering is what makes the
    jacket dissolve into cloud at its lower left. */
+/* Clouds cross the full viewport and wrap, like screen 2. Each starts just off
+   one edge and ends just off the other, so the wrap happens fully out of frame.
+   Cloud 1 travels left→right, cloud 2 right→left, so they cross mid-screen.
+   Periods are non-harmonic (55/70) so the crossings never repeat a pattern.
+
+   The negative delays are the exact point in each cycle where the cloud sits at
+   its Figma left offset, so the first painted frame is the Figma composition. */
+
 .cloud2 {
   position: absolute;
-  left: 43.889vw;            /* 632/1440 */
+  left: 0;
   top: 25.625vw;             /* 369/1440 */
   width: 72.5vw;             /* 1044/1440 */
   height: 54.306vw;          /* 782/1440 */
   pointer-events: none;
-  animation: s6drift2 13s ease-in-out infinite alternate;
+  animation: s6CrossLeft 70s linear infinite;
+  animation-delay: -22.77s;  /* = Figma left 43.889vw */
 }
 
-/* Scale and float live on separate elements on purpose: an animation setting
-   `transform` on the img would replace the wrapper's scale outright, since
-   transform is a single property. Wrapper scales, img floats. */
+
 /* Three elements, three jobs — transform is a single property, so scale and
    float cannot share an element, and the crossfade needs its own layers.
-   wrap = scale, float = translateY, layers = opacity. */
+   wrap = scale, float = translateY, layers = opacity.
+   Sits between the clouds in source order: cloud 2 behind it, cloud 1 in front,
+   which is what dissolves the jacket's lower left. */
 .jacketWrap {
   position: absolute;
   left: 36.111vw;            /* 520/1440 */
@@ -101,26 +110,25 @@
 
 .cloud1 {
   position: absolute;
-  left: 1.25vw;              /* 18/1440 */
+  left: 0;
   top: 34.861vw;             /* 502/1440 */
   width: 58.681vw;           /* 845/1440 */
   height: 43.958vw;          /* 633/1440 */
   pointer-events: none;
-  animation: s6drift1 10s ease-in-out infinite alternate;
+  animation: s6CrossRight 55s linear infinite;
+  animation-delay: -20.77s;  /* = Figma left 1.25vw */
 }
 
-/* ~20px/s and ~12px/s at a 1440 viewport. The earlier 4vw/48s worked out at
-   about 1px per second, which reads as static. Amplitudes are kept small enough
-   that cloud 1 still overlaps the jacket's lower left at full drift, since that
-   overlap is what dissolves it. */
-@keyframes s6drift1 {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(14vw, -2vw, 0); }
+/* ~41px/s and ~36px/s at a 1440 viewport. Start offsets equal each cloud's own
+   width, so it begins fully off-frame. */
+@keyframes s6CrossRight {
+  from { transform: translate3d(-58.681vw, 0, 0); }
+  to   { transform: translate3d(100vw, 0, 0); }
 }
 
-@keyframes s6drift2 {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-11vw, 1.6vw, 0); }
+@keyframes s6CrossLeft {
+  from { transform: translate3d(100vw, 0, 0); }
+  to   { transform: translate3d(-72.5vw, 0, 0); }
 }
 
 .copy {
