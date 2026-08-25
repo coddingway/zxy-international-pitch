@@ -27,7 +27,7 @@
   width: 66.875vw;           /* 963/1440 */
   margin: 0;
   font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
-  font-weight: var(--s6-weight);
+  font-weight: 800;
   font-size: 6.944vw;        /* 100/1440 */
   line-height: 1;
   text-align: center;
