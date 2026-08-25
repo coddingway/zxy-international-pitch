@@ -22,7 +22,7 @@
    400vh would double the speed and the sequence would blur past. */
 .track {
   position: relative;
-  height: 1200vh;
+  height: 1300vh;
 }
 
 /* everything the viewer sees, pinned while the runway scrolls past */
@@ -166,4 +166,16 @@
   opacity: 0;
   will-change: transform;
   z-index: 15;
+}
+
+/* Backdrop behind screen 6 (z below it, above the sequence canvas) so the zoom
+   happens on white instead of on the sequence's last frame. Separate from
+   .white, which is the full-cover whiteout and sits above the nav. */
+.white6 {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 14;
 }

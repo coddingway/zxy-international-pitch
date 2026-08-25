@@ -15,9 +15,12 @@ const WHITE_IN        = 0.26   // white starts covering
 const SWAP            = 0.40   // white is solid: scene out, video in
 const WHITE_OUT       = 0.54   // white fully gone, video exposed
 const CUE_OUT         = 0.12   // scroll cue fades once scrolling starts
-const SEQ_END         = 0.78   // sequence reaches its last frame (screen 5)
+const SEQ_END         = 0.74   // sequence reaches its last frame (screen 5)
+const W6_IN           = 0.68   // second whiteout starts covering the sequence
+const W6_PEAK         = 0.78   // solid white — sequence out, screen 6 in behind it
+const W6_OUT          = 0.86   // white gone, screen 6 revealed mid-zoom
 const S6_IN           = 0.78   // screen 6 starts zooming up from centre
-const S6_FULL         = 0.92   // screen 6 fills the viewport
+const S6_FULL         = 0.94   // screen 6 fills the viewport
 const S6_FROM_SCALE   = 0.28   // how small it starts
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
@@ -31,6 +34,7 @@ export default function Screen2({ onBack }) {
   const whiteRef  = useRef(null)
   const cueRef    = useRef(null)
   const s6Ref     = useRef(null)
+  const white6Ref = useRef(null)
 
   useEffect(() => {
     const scroller = scrollRef.current
@@ -39,6 +43,7 @@ export default function Screen2({ onBack }) {
     const white = whiteRef.current
     const cue   = cueRef.current
     const s6    = s6Ref.current
+    const white6 = white6Ref.current
     let raf = 0
 
     const seq = createFrameSequence({
@@ -56,8 +61,10 @@ export default function Screen2({ onBack }) {
       const z = range(p, 0, ZOOM_END)
       scene.style.transform = `scale(${1 + (ZOOM_SCALE - 1) * z * z})`
 
-      // 2. white covers the swap
-      white.style.opacity = String(range(p, WHITE_IN, SWAP) - range(p, SWAP, WHITE_OUT))
+      // 2. white covers each swap — field to sequence, then sequence to screen 6
+      const w1 = range(p, WHITE_IN, SWAP) - range(p, SWAP, WHITE_OUT)
+      const w2 = range(p, W6_IN, W6_PEAK) - range(p, W6_PEAK, W6_OUT)
+      white.style.opacity = String(Math.max(w1, w2))
 
       // 3. hand off to the sequence under full white
       const onSeq = p >= SWAP
@@ -68,7 +75,11 @@ export default function Screen2({ onBack }) {
       // 4. scrub — scroll position IS the playhead
       if (onSeq) seq.draw(range(p, SWAP, SEQ_END))
 
-      // 5. screen 6 zooms up from the centre and fills the viewport
+      // 5. white backdrop sits behind screen 6, so it zooms against white rather
+      //    than against the frozen last frame of the sequence
+      white6.style.opacity = String(range(p, W6_IN, W6_PEAK))
+
+      // 6. screen 6 zooms up from the centre and fills the viewport
       const s6p = range(p, S6_IN, S6_FULL)
       s6.style.opacity = s6p > 0 ? '1' : '0'
       s6.style.pointerEvents = s6p >= 1 ? 'auto' : 'none'
@@ -121,6 +132,9 @@ export default function Screen2({ onBack }) {
             <ScrollCue />
           </div>
           <GlobeBadge onClick={onBack} />
+
+          {/* white ground for screen 6 to grow against */}
+          <div ref={white6Ref} className={styles.white6} />
 
           {/* Screen 6 rides in on the same scroll, scaling up from the centre */}
           <div ref={s6Ref} className={styles.screen6}>
