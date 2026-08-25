@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Lenis from 'lenis'
 import GlobeBadge from './GlobeBadge.jsx'
 import Nav from './Nav.jsx'
 import ScrollCue from './ScrollCue.jsx'
@@ -51,6 +52,8 @@ export default function Screen2({ onBack }) {
   const white6Ref = useRef(null)
   const s7Ref     = useRef(null)
   const cueRef    = useRef(null)
+  const trackRef  = useRef(null)
+  const lenisRef  = useRef(null)
 
   useEffect(() => {
     const scroller = scrollRef.current
@@ -66,6 +69,22 @@ export default function Screen2({ onBack }) {
     let s7Shown = false
     let warm = false
     let raf = 0
+
+    // Smooth scrolling for the whole runway. The scroller is a div rather than
+    // the window, so Lenis is pointed at it explicitly. It still writes
+    // scrollTop and still fires `scroll`, so `apply` below needs no changes.
+    const lenis = new Lenis({
+      wrapper: scroller,
+      content: trackRef.current,
+      duration: 1.1,
+      easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    })
+    lenisRef.current = lenis
+
+    let lenisRaf = 0
+    const tick = time => { lenis.raf(time); lenisRaf = requestAnimationFrame(tick) }
+    lenisRaf = requestAnimationFrame(tick)
 
     const seq = createFrameSequence({
       canvas,
@@ -170,6 +189,9 @@ export default function Screen2({ onBack }) {
 
     return () => {
       cancelAnimationFrame(raf)
+      cancelAnimationFrame(lenisRaf)
+      lenis.destroy()
+      lenisRef.current = null
       if (holdTimer) clearTimeout(holdTimer)
       scroller.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
@@ -182,13 +204,16 @@ export default function Screen2({ onBack }) {
   const backToSwatches = () => {
     const el = scrollRef.current
     if (!el) return
-    const span = el.scrollHeight - el.clientHeight
-    el.scrollTo({ top: span * S6_REST, behavior: 'smooth' })
+    const top = (el.scrollHeight - el.clientHeight) * S6_REST
+    // through Lenis, not el.scrollTo — a native smooth scroll and the smooth
+    // scroller would drive scrollTop against each other
+    if (lenisRef.current) lenisRef.current.scrollTo(top, { duration: 1.4 })
+    else el.scrollTo({ top, behavior: 'smooth' })
   }
 
   return (
     <div ref={scrollRef} className={styles.root}>
-      <div className={styles.track}>
+      <div ref={trackRef} className={styles.track}>
         <div className={styles.stage}>
           <div ref={sceneRef} className={styles.scene}>
             {/* image 32 — aerial field, cropped square */}
