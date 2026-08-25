@@ -3,6 +3,7 @@ import GlobeBadge from './GlobeBadge.jsx'
 import Nav from './Nav.jsx'
 import ScrollCue from './ScrollCue.jsx'
 import Screen6 from './Screen6.jsx'
+import Screen7 from './Screen7.jsx'
 import styles from './Screen2.module.css'
 import { createFrameSequence } from '../lib/frameSequence.js'
 
@@ -25,6 +26,7 @@ const JACKET_FROM     = 0.55   // the jacket alone starts this small
 const S7_IN           = 0.90   // screen 6 starts clearing out (figma Variant7)
 const S7_OUT          = 1.00   // only nav + shrunken shirt remain
 const JACKET_END      = 0.614  // 246/401 — the shirt's size in Variant7
+const S7_HOLD_MS      = 1000   // beat between the clear-out finishing and four worlds
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -37,6 +39,7 @@ export default function Screen2({ onBack }) {
   const whiteRef  = useRef(null)
   const s6Ref     = useRef(null)
   const white6Ref = useRef(null)
+  const s7Ref     = useRef(null)
 
   useEffect(() => {
     const scroller = scrollRef.current
@@ -45,6 +48,9 @@ export default function Screen2({ onBack }) {
     const white = whiteRef.current
     const s6    = s6Ref.current
     const white6 = white6Ref.current
+    const s7El = s7Ref.current
+    let holdTimer = 0
+    let s7Shown = false
     let raf = 0
 
     const seq = createFrameSequence({
@@ -99,6 +105,27 @@ export default function Screen2({ onBack }) {
 
       // float once the jacket is at its proper size, but stop it while it leaves
       s6.style.setProperty('--s6-float', jp >= 1 && s7 === 0 ? 'running' : 'paused')
+
+      // 8. four worlds arrives a beat after the clear-out lands. Kept mounted the
+      //    whole time so its four videos are already decoding — a video mounted
+      //    on demand would stall on its first frame.
+      if (s7 >= 1) {
+        if (!s7Shown && !holdTimer) {
+          holdTimer = setTimeout(() => {
+            holdTimer = 0
+            s7Shown = true
+            s7El.style.opacity = '1'
+            s7El.style.pointerEvents = 'auto'
+          }, S7_HOLD_MS)
+        }
+      } else {
+        if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0 }
+        if (s7Shown) {
+          s7Shown = false
+          s7El.style.opacity = '0'
+          s7El.style.pointerEvents = 'none'
+        }
+      }
     }
 
     // Cancel-and-requeue rather than an `if (!raf)` guard: a frame queued while
@@ -117,6 +144,7 @@ export default function Screen2({ onBack }) {
 
     return () => {
       cancelAnimationFrame(raf)
+      if (holdTimer) clearTimeout(holdTimer)
       scroller.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       document.removeEventListener('visibilitychange', onScroll)
@@ -155,6 +183,11 @@ export default function Screen2({ onBack }) {
           {/* Screen 6 rides in on the same scroll, scaling up from the centre */}
           <div ref={s6Ref} className={styles.screen6}>
             <Screen6 onBack={onBack} />
+          </div>
+
+          {/* Four worlds — mounted from the start so its videos are warm */}
+          <div ref={s7Ref} className={styles.screen7}>
+            <Screen7 onBackToTop={() => scroller.scrollTo({ top: 0, behavior: 'smooth' })} />
           </div>
         </div>
       </div>

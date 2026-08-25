@@ -65,13 +65,13 @@
   z-index: 20;
 }
 
-/* Above screen 6 (15) so the cue stays visible once it arrives, but below the
-   whiteout (20) so the transitions still go fully blank. */
+/* Above screen 6 (15) and four worlds (17) so the cue stays visible on both,
+   but below the whiteout (20) so the transitions still go fully blank. */
 .cueWrap {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 16;
+  z-index: 18;
 }
 
 /* image 32 — 1440×1440 square, pulled up 196px so the frame crops it */
@@ -178,4 +178,15 @@
   opacity: 0;
   pointer-events: none;
   z-index: 14;
+}
+
+/* Four worlds — above screen 6, below the scroll cue so the cue stays visible
+   on it (the Figma frame keeps a down arrow here too). */
+.screen7 {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+  z-index: 17;
 }

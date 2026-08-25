@@ -1,0 +1,124 @@
+/* Figma frame 1440×907, positions as fractions of that width (vw). */
+
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* All four videos stay mounted and playing, and the switch is a crossfade.
+   Loading or seeking on demand is what produces the glitch — a mounted, already
+   -decoding video has a frame ready the instant its opacity comes up. */
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.videoOn { opacity: 1; }
+
+/* Frame 8 — title block */
+.title {
+  position: absolute;
+  left: 9.375vw;             /* 135/1440 */
+  top: 11.667vw;             /* 168/1440 */
+  width: 20.694vw;           /* 298/1440 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.833vw;              /* 12/1440 */
+  color: #000;
+}
+
+.titleBig {
+  margin: 0;
+  font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 6.111vw;        /* 88/1440 */
+  line-height: 1;
+  white-space: pre-line;
+}
+
+.titleSub {
+  margin: 0;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 300;
+  font-size: 1.111vw;        /* 16/1440 */
+  line-height: 1.5;
+}
+
+/* Group 5 — the four worlds. 72px rhythm from y=354. */
+.worlds {
+  position: absolute;
+  left: 71.667vw;            /* 1032/1440 */
+  top: 24.583vw;             /* 354/1440 */
+  display: flex;
+  flex-direction: column;
+  gap: 1.389vw;              /* 72 - 52 = 20/1440 */
+  align-items: flex-start;
+}
+
+.world {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 3.611vw;        /* 52/1440 */
+  line-height: 1;
+  height: 3.611vw;
+  white-space: nowrap;
+  text-align: left;
+  color: #000;
+  opacity: 0.1;              /* inactive: black at 10%, per Figma */
+  transition: opacity 0.45s ease, color 0.45s ease;
+}
+
+.worldOn {
+  opacity: 1;
+  color: var(--world-ink);
+}
+
+.world:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 4px;
+}
+
+/* Group 6 — back to top */
+.up {
+  position: absolute;
+  left: 93.542vw;            /* 1347/1440 */
+  top: 50.556vw;             /* 728/1440 */
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0.5px solid #e7e7e7;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+
+.up:hover { transform: scale(1.08); }
+
+.upIcon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  transform: rotate(180deg);   /* reuse the down arrow glyph */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video, .world, .up { transition: none; }
+}
