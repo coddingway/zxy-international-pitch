@@ -27,6 +27,10 @@ const S7_IN           = 0.90   // screen 6 starts clearing out (figma Variant7)
 const S7_OUT          = 1.00   // only nav + shrunken shirt remain
 const JACKET_END      = 0.614  // 246/401 — the shirt's size in Variant7
 const S7_HOLD_MS      = 1000   // beat between the clear-out finishing and four worlds
+// Where the back-to-top button returns to: the rest beat between the jacket
+// reaching full size and the clear-out starting, so screen 6 is fully assembled
+// with its swatches in place.
+const S6_REST         = (JACKET_FULL + S7_IN) / 2
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -152,6 +156,14 @@ export default function Screen2({ onBack }) {
     }
   }, [])
 
+  // Back to the shirt/swatch screen, not to the very top of the runway.
+  const backToSwatches = () => {
+    const el = scrollRef.current
+    if (!el) return
+    const span = el.scrollHeight - el.clientHeight
+    el.scrollTo({ top: span * S6_REST, behavior: 'smooth' })
+  }
+
   return (
     <div ref={scrollRef} className={styles.root}>
       <div className={styles.track}>
@@ -187,7 +199,7 @@ export default function Screen2({ onBack }) {
 
           {/* Four worlds — mounted from the start so its videos are warm */}
           <div ref={s7Ref} className={styles.screen7}>
-            <Screen7 onBackToTop={() => scroller.scrollTo({ top: 0, behavior: 'smooth' })} />
+            <Screen7 onBackToTop={backToSwatches} />
           </div>
         </div>
       </div>
