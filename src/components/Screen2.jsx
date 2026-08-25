@@ -44,6 +44,7 @@ export default function Screen2({ onBack }) {
   const s6Ref     = useRef(null)
   const white6Ref = useRef(null)
   const s7Ref     = useRef(null)
+  const cueRef    = useRef(null)
 
   useEffect(() => {
     const scroller = scrollRef.current
@@ -53,6 +54,7 @@ export default function Screen2({ onBack }) {
     const s6    = s6Ref.current
     const white6 = white6Ref.current
     const s7El = s7Ref.current
+    const cue = cueRef.current
     let holdTimer = 0
     let s7Shown = false
     let raf = 0
@@ -120,6 +122,8 @@ export default function Screen2({ onBack }) {
             s7Shown = true
             s7El.style.opacity = '1'
             s7El.style.pointerEvents = 'auto'
+            // four worlds is the end of the runway — nothing left to scroll to
+            cue.style.opacity = '0'
           }, S7_HOLD_MS)
         }
       } else {
@@ -128,6 +132,7 @@ export default function Screen2({ onBack }) {
           s7Shown = false
           s7El.style.opacity = '0'
           s7El.style.pointerEvents = 'none'
+          cue.style.opacity = '1'
         }
       }
     }
@@ -184,7 +189,7 @@ export default function Screen2({ onBack }) {
 
           <Nav />
           {/* stays put for the whole scroll, and above screen 6 */}
-          <div className={styles.cueWrap}>
+          <div ref={cueRef} className={styles.cueWrap}>
             <ScrollCue />
           </div>
           <GlobeBadge onClick={onBack} />
