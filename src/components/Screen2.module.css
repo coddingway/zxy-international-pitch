@@ -86,6 +86,44 @@
   pointer-events: none;
 }
 
+/* "ZXY International" — sits above the field but below all three clouds, so
+   they drift across it, exactly as the Figma layer order has it. Centred rather
+   than pinned to y=404: its centre is 464 of 907, which is the middle of the
+   frame, and centring holds at any viewport aspect.
+
+   Revealed by a fade and rise rather than a clip wipe: the wordmark carries a
+   0 20px 30px drop shadow, and any clip-path or overflow mask would cut the
+   shadow off at rest as well as during the reveal. */
+.brand {
+  position: absolute;
+  left: 50%;
+  top: 51.2%;
+  transform: translate(-50%, -50%);
+  width: 66.875vw;           /* 963/1440 */
+  margin: 0;
+  font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 8.333vw;        /* 120/1440 */
+  line-height: 1;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  animation: brandReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+/* the 0.5s delay lets screen 1's whiteout finish clearing first */
+@keyframes brandReveal {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 0.34em)) scale(0.97); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand { animation: none; opacity: 1; }
+}
+
 .cloud {
   position: absolute;
   pointer-events: none;

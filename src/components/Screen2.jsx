@@ -194,6 +194,9 @@ export default function Screen2({ onBack }) {
             {/* image 32 — aerial field, cropped square */}
             <img src="/field-top.png" alt="" className={styles.field} />
 
+            {/* Brand name — above the field, below the clouds */}
+            <p className={styles.brand}>ZXY International</p>
+
             {/* Clouds drift above the field. Cloud 3 reuses Cloud 1's bitmap (as in Figma). */}
             <img src="/cloud-1.png" alt="" className={`${styles.cloud} ${styles.cloud1}`} />
             <img src="/cloud-2.png" alt="" className={`${styles.cloud} ${styles.cloud2}`} />
