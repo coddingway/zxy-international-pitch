@@ -9,35 +9,38 @@ import styles from './Screen2.module.css'
 import { createFrameSequence } from '../lib/frameSequence.js'
 
 // Scroll choreography, as fractions of the scroll track.
-// The scene zooms into the field, white takes over, then the video is scrubbed
-// frame-by-frame by the remaining scroll. Nothing ever auto-plays.
-const ZOOM_END        = 0.35   // scene finishes its zoom
+// The scene zooms through the wordmark, white takes over, then the sequence is
+// scrubbed frame-by-frame by the remaining scroll. Nothing ever auto-plays.
+// The field phase is deliberately short — 2 viewport heights, not the 5.6 it
+// took before — while the sequence keeps ~12px of scroll per frame.
+const ZOOM_END        = 0.168   // scene finishes its zoom
 // Big enough that the letter grows past the viewport and we pass through it —
 // the "n" is white, so filling the screen with it IS the start of the whiteout.
 const ZOOM_SCALE      = 14
-const WHITE_IN        = 0.26   // white starts covering
-const SWAP            = 0.40   // white is solid: scene out, video in
-const WHITE_OUT       = 0.54   // white fully gone, video exposed
-const SEQ_END         = 0.74   // sequence reaches its last frame (screen 5)
-const W6_IN           = 0.68   // second whiteout starts covering the sequence
-const W6_PEAK         = 0.78   // solid white — sequence out, screen 6 in behind it
-const W6_OUT          = 0.88   // white gone — screen 6 is already at full size by now
-const S6_IN           = 0.78   // screen 6 appears, already at full layout
-const JACKET_FULL     = 0.86   // the jacket alone finishes growing here
+const WHITE_IN        = 0.125   // white starts covering
+const SWAP            = 0.192   // white is solid: scene out, video in
+const WHITE_OUT       = 0.381   // white fully gone, video exposed
+const SEQ_END         = 0.650   // sequence reaches its last frame (screen 5)
+const W6_IN           = 0.569   // second whiteout starts covering the sequence
+const W6_PEAK         = 0.704   // solid white — sequence out, screen 6 in behind it
+const W6_OUT          = 0.838   // white gone — screen 6 is already at full size by now
+const S6_IN           = 0.704   // screen 6 appears, already at full layout
+const JACKET_FULL     = 0.812   // the jacket alone finishes growing here
 const JACKET_FROM     = 0.55   // the jacket alone starts this small
 // 0.86 - 0.90 is a rest beat: nothing moves on scroll, so the float is seen.
-const S7_IN           = 0.90   // screen 6 starts clearing out (figma Variant7)
+const S7_IN           = 0.865   // screen 6 starts clearing out (figma Variant7)
 const S7_OUT          = 1.00   // only nav + shrunken shirt remain
 const JACKET_END      = 0.614  // 246/401 — the shirt's size in Variant7
 const S7_HOLD_MS      = 1000   // beat between the clear-out finishing and four worlds
 // Screen 7's videos only start buffering here. Left at preload=auto they began
 // at ~433ms, ahead of the frame sequence they compete with, and the frames are
 // needed within seconds while the videos are not needed for a minute.
-const VIDEO_WARM      = 0.55
+const VIDEO_WARM      = 0.42
 // Where the back-to-top button returns to: the rest beat between the jacket
 // reaching full size and the clear-out starting, so screen 6 is fully assembled
 // with its swatches in place.
 const S6_REST         = (JACKET_FULL + S7_IN) / 2
+const ZOOM_LETTER     = 'e'    // the glyph the camera flies through
 const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -58,7 +61,7 @@ export default function Screen2({ onBack }) {
   const brandRef  = useRef(null)
   const lenisRef  = useRef(null)
 
-  // Aim the zoom at the "n" of the wordmark, so the scene flies through that
+  // Aim the zoom at ZOOM_LETTER in the wordmark, so the scene flies through that
   // letter rather than the middle of the frame. Measured from the live glyph
   // with a Range rather than hardcoded: the font is sized in vw, so the letter
   // moves with the viewport, and a guessed coordinate would drift.
@@ -79,13 +82,14 @@ export default function Screen2({ onBack }) {
       const str = text.textContent
       let best = null
       for (let i = 0; i < str.length; i++) {
-        if (str[i] !== 'n') continue
+        if (str[i] !== ZOOM_LETTER) continue
         const range = document.createRange()
         range.setStart(text, i)
         range.setEnd(text, i + 1)
         const g = range.getBoundingClientRect()
-        // the left stem of an "n" is solid white; its centre is the open arch,
-        // which would show field through the gap as we fly in
+        // aim at the left stroke, not the glyph centre: both "n" and "e" are
+        // hollow in the middle, so the centre would fly through the counter and
+        // show field instead of white
         const x = g.left + g.width * 0.18
         const y = g.top + g.height * 0.62
         const d = Math.abs(x - (box.left + box.width / 2))

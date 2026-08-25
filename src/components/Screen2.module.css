@@ -15,14 +15,13 @@
 
 .root::-webkit-scrollbar { display: none; }
 
-/* The scroll runway — its height is how much scrolling the transition takes.
-   1200vh: the sequence runs to screen 5, then screen 6 zooms in on the tail. 360 frames over the 60% of
-   the runway after the hand-off works out at ~10.6px of scroll per frame, which
-   matches the pacing the shorter sequence had at 400vh. Halving this back to
-   400vh would double the speed and the sequence would blur past. */
+/* The scroll runway — its height is how much scrolling the whole thing takes.
+   1140vh: 2 viewport heights to fly through the wordmark, then the sequence at
+   ~12px of scroll per frame, then screens 6 and 7. Every constant in Screen2.jsx
+   is a fraction of this, so changing it rescales the whole choreography. */
 .track {
   position: relative;
-  height: 1500vh;
+  height: 1140vh;
 }
 
 /* everything the viewer sees, pinned while the runway scrolls past */
@@ -41,7 +40,12 @@
   position: absolute;
   inset: 0;
   transform-origin: center center;
-  will-change: transform;
+  /* No will-change here on purpose. It pins the layer to a raster made at the
+     scale it had when promoted, and the GPU then just stretches that bitmap —
+     so the wordmark turned to mush on the way in and snapped sharp again on the
+     way out, once the scale settled and Chrome re-rastered. Leaving it off lets
+     Chrome re-raster as the scale climbs, which is what keeps the type crisp
+     while we fly through it. */
 }
 
 /* The transition plays as an image sequence blitted to this canvas — see
