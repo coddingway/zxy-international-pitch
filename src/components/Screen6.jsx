@@ -30,12 +30,9 @@ export default function Screen6({ onBack }) {
       {/* Cloud 2 behind the jacket */}
       <img src="/cloud-1.png" alt="" className={styles.cloud2} />
 
-      <img
-        src={t.jacket}
-        alt="ZXY apparel"
-        className={styles.jacket}
-        style={{ '--s6-jacket-h': t.jacketH }}
-      />
+      <div className={styles.jacketWrap} style={{ '--s6-jacket-h': t.jacketH }}>
+        <img src={t.jacket} alt="ZXY apparel" className={styles.jacket} />
+      </div>
 
       {/* Cloud 1 in front of the jacket — this is what dissolves its lower left */}
       <img src="/cloud-1.png" alt="" className={styles.cloud1} />

@@ -86,6 +86,8 @@ export default function Screen2({ onBack }) {
       s6.style.pointerEvents = shown ? 'auto' : 'none'
       const jp = range(p, S6_IN, JACKET_FULL)
       s6.style.setProperty('--s6-jacket-scale', String(JACKET_FROM + (1 - JACKET_FROM) * jp))
+      // the float only starts once the jacket has reached its proper size
+      s6.style.setProperty('--s6-float', jp >= 1 ? 'running' : 'paused')
     }
 
     // Cancel-and-requeue rather than an `if (!raf)` guard: a frame queued while

@@ -39,20 +39,40 @@
   animation: s6drift2 18s ease-in-out infinite alternate;
 }
 
-.jacket {
+/* Scale and float live on separate elements on purpose: an animation setting
+   `transform` on the img would replace the wrapper's scale outright, since
+   transform is a single property. Wrapper scales, img floats. */
+.jacketWrap {
   position: absolute;
   left: 36.111vw;            /* 520/1440 */
   top: 20.069vw;             /* 289/1440 */
   width: 27.847vw;           /* 401/1440 */
   height: var(--s6-jacket-h);
-  object-fit: contain;
-  object-position: bottom;
   pointer-events: none;
   /* only the jacket grows on arrival — the rest of the screen is already in
      place. Driven by Screen2's scroll handler; defaults to 1 when standalone. */
   transform: scale(var(--s6-jacket-scale, 1));
   transform-origin: center center;
   will-change: transform;
+}
+
+.jacket {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  /* 1200ms hold, 5000ms ease-out up, 1200ms hold, 5000ms ease-out back:
+     a 12.4s cycle. Held paused until the jacket has finished growing. */
+  animation: jacketFloat 12.4s infinite;
+  animation-play-state: var(--s6-float, running);
+  will-change: transform;
+}
+
+@keyframes jacketFloat {
+  0%,     9.677% { transform: translateY(0);        animation-timing-function: ease-out; }
+  50%,   59.677% { transform: translateY(-2.778vw); animation-timing-function: ease-out; }
+  100%           { transform: translateY(0); }
 }
 
 .cloud1 {
@@ -131,6 +151,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cloud1, .cloud2 { animation: none; }
+  .cloud1, .cloud2, .jacket { animation: none; }
   .swatch { transition: none; }
 }
