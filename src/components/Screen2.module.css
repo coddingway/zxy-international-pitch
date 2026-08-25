@@ -65,11 +65,13 @@
   z-index: 20;
 }
 
+/* Above screen 6 (15) so the cue stays visible once it arrives, but below the
+   whiteout (20) so the transitions still go fully blank. */
 .cueWrap {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 6;
+  z-index: 16;
 }
 
 /* image 32 — 1440×1440 square, pulled up 196px so the frame crops it */

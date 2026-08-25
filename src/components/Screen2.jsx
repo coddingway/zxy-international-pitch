@@ -14,7 +14,6 @@ const ZOOM_SCALE      = 2.4
 const WHITE_IN        = 0.26   // white starts covering
 const SWAP            = 0.40   // white is solid: scene out, video in
 const WHITE_OUT       = 0.54   // white fully gone, video exposed
-const CUE_OUT         = 0.12   // scroll cue fades once scrolling starts
 const SEQ_END         = 0.74   // sequence reaches its last frame (screen 5)
 const W6_IN           = 0.68   // second whiteout starts covering the sequence
 const W6_PEAK         = 0.78   // solid white — sequence out, screen 6 in behind it
@@ -32,7 +31,6 @@ export default function Screen2({ onBack }) {
   const sceneRef  = useRef(null)
   const canvasRef = useRef(null)
   const whiteRef  = useRef(null)
-  const cueRef    = useRef(null)
   const s6Ref     = useRef(null)
   const white6Ref = useRef(null)
 
@@ -41,7 +39,6 @@ export default function Screen2({ onBack }) {
     const scene = sceneRef.current
     const canvas = canvasRef.current
     const white = whiteRef.current
-    const cue   = cueRef.current
     const s6    = s6Ref.current
     const white6 = white6Ref.current
     let raf = 0
@@ -70,7 +67,6 @@ export default function Screen2({ onBack }) {
       const onSeq = p >= SWAP
       scene.style.opacity = onSeq ? '0' : '1'
       canvas.style.opacity = onSeq ? '1' : '0'
-      cue.style.opacity = String(1 - range(p, 0, CUE_OUT))
 
       // 4. scrub — scroll position IS the playhead
       if (onSeq) seq.draw(range(p, SWAP, SEQ_END))
@@ -132,7 +128,8 @@ export default function Screen2({ onBack }) {
           <div ref={whiteRef} className={styles.white} />
 
           <Nav />
-          <div ref={cueRef} className={styles.cueWrap}>
+          {/* stays put for the whole scroll, and above screen 6 */}
+          <div className={styles.cueWrap}>
             <ScrollCue />
           </div>
           <GlobeBadge onClick={onBack} />
