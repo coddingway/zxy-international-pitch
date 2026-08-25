@@ -40,18 +40,25 @@
 /* Cloud 2 behind the jacket, Cloud 1 in front — that ordering is what makes the
    jacket dissolve into cloud at its lower left. */
 
-/* The clouds already own `transform` for their crossing loop, so the exit rise
+/* The clouds already own `transform` for their crossing loop, so the exit slide
    lives on these wrappers. Two of them rather than one, because the jacket sits
-   between the clouds and that layering is what dissolves it. Both rise by the
-   same 1056px (73.333vw), exactly as the two Figma states differ. */
+   between the clouds and that layering is what dissolves it.
+
+   Each leaves by its nearest edge: cloud 2 (right of centre) exits right,
+   cloud 1 (left of centre) exits left. The distances are sized to clear the
+   viewport from ANY point in the crossing loop, not just from the Figma resting
+   position — cloud 1 can be as far right as 100vw when the exit begins, so it
+   needs 100 + its own 58.681vw width to be fully gone. */
 .cloudBack,
 .cloudFront {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  transform: translate3d(0, calc(-73.333vw * var(--s7, 0)), 0);
   opacity: calc(1 - var(--s7, 0));
 }
+
+.cloudBack  { transform: translate3d(calc( 175vw * var(--s7, 0)), 0, 0); }
+.cloudFront { transform: translate3d(calc(-160vw * var(--s7, 0)), 0, 0); }
 
 /* Clouds cross the full viewport and wrap, like screen 2. Each starts just off
    one edge and ends just off the other, so the wrap happens fully out of frame.
