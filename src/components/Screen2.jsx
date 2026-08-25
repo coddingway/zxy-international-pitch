@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import GlobeBadge from './GlobeBadge.jsx'
 import Nav from './Nav.jsx'
 import ScrollCue from './ScrollCue.jsx'
@@ -27,6 +27,10 @@ const S7_IN           = 0.90   // screen 6 starts clearing out (figma Variant7)
 const S7_OUT          = 1.00   // only nav + shrunken shirt remain
 const JACKET_END      = 0.614  // 246/401 — the shirt's size in Variant7
 const S7_HOLD_MS      = 1000   // beat between the clear-out finishing and four worlds
+// Screen 7's videos only start buffering here. Left at preload=auto they began
+// at ~433ms, ahead of the frame sequence they compete with, and the frames are
+// needed within seconds while the videos are not needed for a minute.
+const VIDEO_WARM      = 0.55
 // Where the back-to-top button returns to: the rest beat between the jacket
 // reaching full size and the clear-out starting, so screen 6 is fully assembled
 // with its swatches in place.
@@ -37,6 +41,8 @@ const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
 const range = (v, a, b) => clamp01((v - a) / (b - a))
 
 export default function Screen2({ onBack }) {
+  const [s7Visible, setS7Visible] = useState(false)
+  const [warmVideos, setWarmVideos] = useState(false)
   const scrollRef = useRef(null)
   const sceneRef  = useRef(null)
   const canvasRef = useRef(null)
@@ -58,6 +64,7 @@ export default function Screen2({ onBack }) {
     const stage = scroller.querySelector(`.${styles.stage}`)
     let holdTimer = 0
     let s7Shown = false
+    let warm = false
     let raf = 0
 
     const seq = createFrameSequence({
@@ -78,6 +85,9 @@ export default function Screen2({ onBack }) {
       // 1. camera pushes into the field — accelerating, so it reads as a descent
       const z = range(p, 0, ZOOM_END)
       scene.style.transform = `scale(${1 + (ZOOM_SCALE - 1) * z * z})`
+
+      // start buffering screen 7's videos once the sequence is well underway
+      if (p >= VIDEO_WARM) warm ||= (setWarmVideos(true), true)
 
       // 2. white covers each swap — field to sequence, then sequence to screen 6
       const w1 = range(p, WHITE_IN, SWAP) - range(p, SWAP, WHITE_OUT)
@@ -127,6 +137,7 @@ export default function Screen2({ onBack }) {
             s7Shown = true
             s7El.style.opacity = '1'
             s7El.style.pointerEvents = 'auto'
+            setS7Visible(true)
             // four worlds is the end of the runway — nothing left to scroll to
             cue.style.opacity = '0'
           }, S7_HOLD_MS)
@@ -137,6 +148,7 @@ export default function Screen2({ onBack }) {
           s7Shown = false
           s7El.style.opacity = '0'
           s7El.style.pointerEvents = 'none'
+          setS7Visible(false)
           cue.style.opacity = '1'
         }
       }
@@ -207,9 +219,10 @@ export default function Screen2({ onBack }) {
             <Screen6 onBack={onBack} />
           </div>
 
-          {/* Four worlds — mounted from the start so its videos are warm */}
+          {/* Four worlds — mounted from the start, but its videos stay unloaded
+              until VIDEO_WARM so they do not compete with the frame sequence */}
           <div ref={s7Ref} className={styles.screen7}>
-            <Screen7 onBackToTop={backToSwatches} />
+            <Screen7 onBackToTop={backToSwatches} visible={s7Visible} warm={warmVideos} />
           </div>
         </div>
       </div>

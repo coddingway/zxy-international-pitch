@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Nav from './Nav.jsx'
 import styles from './Screen7.module.css'
 import arrowDown from '../assets/icon-arrow-down.svg'
@@ -12,8 +12,32 @@ const WORLDS = [
   { key: 'workwear',   label: 'Workwear',   ink: '#000000' },
 ]
 
-export default function Screen7({ onBackToTop }) {
+export default function Screen7({ onBackToTop, visible = true, warm = true }) {
   const [world, setWorld] = useState('lifestyle')
+  const refs = useRef({})
+
+  // Start the active world from its first frame whenever the screen appears or
+  // the world changes. These clips open on the model facing front, and that
+  // opening pose is the shot — autoplaying from page load meant a 10s clip had
+  // already looped several times before anyone arrived, so you joined it
+  // mid-movement with the model off to one side.
+  useEffect(() => {
+    const all = Object.entries(refs.current)
+    if (!visible) {
+      all.forEach(([, v]) => v && v.pause())
+      return
+    }
+    const el = refs.current[world]
+    if (!el) return
+    el.currentTime = 0
+    el.play?.()?.catch(() => {})   // a blocked autoplay must not throw
+    // let the outgoing clip run through the crossfade, then stop it — only one
+    // video decodes at rest, which is what keeps this cheap
+    const t = setTimeout(() => {
+      all.forEach(([k, v]) => { if (k !== world && v) v.pause() })
+    }, 650)
+    return () => clearTimeout(t)
+  }, [visible, world])
 
   return (
     <div className={styles.root}>
@@ -21,13 +45,13 @@ export default function Screen7({ onBackToTop }) {
       {WORLDS.map(w => (
         <video
           key={w.key}
+          ref={el => { refs.current[w.key] = el }}
           className={`${styles.video} ${world === w.key ? styles.videoOn : ''}`}
           src={`/screen6/${w.key}.mp4`}
-          autoPlay
           muted
           loop
           playsInline
-          preload="auto"
+          preload={warm ? 'auto' : 'none'}
           disablePictureInPicture
         />
       ))}
