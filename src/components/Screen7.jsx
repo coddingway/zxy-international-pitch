@@ -12,6 +12,9 @@ const WORLDS = [
   { key: 'workwear',   label: 'Workwear',   ink: '#000000' },
 ]
 
+// the world showing on arrival — loaded up front so landing here never waits
+const FIRST = WORLDS[0].key
+
 export default function Screen7({ onBackToTop, visible = true, warm = true }) {
   const [world, setWorld] = useState('lifestyle')
   const refs = useRef({})
@@ -51,7 +54,10 @@ export default function Screen7({ onBackToTop, visible = true, warm = true }) {
           muted
           loop
           playsInline
-          preload={warm ? 'auto' : 'none'}
+          /* The first world loads immediately so arriving never stalls; the
+             other three wait until the scroll is well into the sequence, so
+             they do not compete with the frames for bandwidth. */
+          preload={w.key === FIRST || warm ? 'auto' : 'none'}
           disablePictureInPicture
         />
       ))}
