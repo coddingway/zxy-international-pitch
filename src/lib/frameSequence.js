@@ -56,8 +56,10 @@ export function createFrameSequence({ canvas, count, url, onProgress }) {
     const ctx = canvas.getContext('2d')
     const cw = canvas.width, ch = canvas.height
     ctx.clearRect(0, 0, cw, ch)
-    // `contain` — whole frame visible, never cropped or zoomed
-    const s = Math.min(cw / img.naturalWidth, ch / img.naturalHeight)
+    // `cover` — fill the viewport at any aspect ratio, cropping the overflow.
+    // `contain` left white bars on anything that is not 16:9, which is most
+    // desktops once you account for browser chrome.
+    const s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight)
     const w = img.naturalWidth * s, h = img.naturalHeight * s
     ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h)
   }
