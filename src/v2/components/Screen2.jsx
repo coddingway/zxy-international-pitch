@@ -6,11 +6,12 @@ import ScrollCue from './ScrollCue.jsx'
 import Screen6 from './Screen6.jsx'
 import Screen7 from './Screen7.jsx'
 import styles from './Screen2.module.css'
-import { createFrameSequence } from '../lib/frameSequence.js'
+import { createCottonScene } from '../lib/cottonScene.js'
 
 // Scroll choreography, as fractions of the scroll track.
-// The scene zooms through the wordmark, white takes over, then the sequence is
-// scrubbed frame-by-frame by the remaining scroll. Nothing ever auto-plays.
+// The scene zooms through the wordmark, white takes over, then screens 3–5 run
+// as a real 3D scene driven frame-by-frame by the remaining scroll (variant B).
+// Nothing ever auto-plays.
 // The field phase is deliberately short — 2 viewport heights, not the 5.6 it
 // took before — while the sequence keeps ~12px of scroll per frame.
 const ZOOM_END        = 0.168   // scene finishes its zoom
@@ -46,7 +47,6 @@ const ZOOM_LETTER     = 'e'    // the glyph the camera flies through
 // 0.125, so the dissolve reads as part of the push-in rather than trailing it.
 const BRAND_FADE_IN   = 0
 const BRAND_FADE_OUT  = 0.06
-const FRAME_COUNT     = 360    // public/cotton-seq/frame_001..360.jpg (covers screens 2-5)
 
 const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v)
 const range = (v, a, b) => clamp01((v - a) / (b - a))
@@ -153,11 +153,10 @@ export default function Screen2({ onBack }) {
     const tick = time => { lenis.raf(time); lenisRaf = requestAnimationFrame(tick) }
     lenisRaf = requestAnimationFrame(tick)
 
-    const seq = createFrameSequence({
-      canvas,
-      count: FRAME_COUNT,
-      url: n => `/cotton-seq/frame_${String(n).padStart(3, '0')}.jpg`,
-    })
+    // Variant B renders screens 3–5 as a live 3D scene instead of scrubbing the
+    // 360-frame sequence. Same { draw(p), dispose() } contract, so everything
+    // below is unchanged — and it drops ~30MB of JPEGs from this variant.
+    const seq = createCottonScene({ canvas })
 
     // The cue only makes sense once there is sequence left to scroll through:
     // off while flying through the wordmark, on from screen 3, off again once
