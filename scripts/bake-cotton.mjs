@@ -15,7 +15,8 @@ import * as THREE from 'three'
 import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier.js'
 import { readFileSync, writeFileSync } from 'fs'
 
-const SRC = 'media-src/cotton-boll-source.glb'
+const SRC = process.argv[2] || 'media-src/cotton-boll-source.glb'
+const OUT = process.argv[3] || 'cotton-boll'
 const LO_KEEP = 0.15   // ~3.3k tris, for the bulk of the field
 
 // ---------- read the GLB (POSITION + indices is all it has) ----------
@@ -43,6 +44,61 @@ function readGlb(path) {
   const IdxType = iacc.componentType === 5125 ? Uint32Array : Uint16Array
   const index = read(prim.indices, IdxType, 1)
   return { position: Float32Array.from(position), index: Array.from(index) }
+}
+
+// ---------- read an OBJ (v / vn / f v//vn) ----------
+// The cotton3 export carries one normal per face, i.e. flat shading. We drop
+// those and recompute smooth ones — flat facets read as faceted plastic on
+// something that should look like lint.
+function readObj(path) {
+  const verts = []
+  const faces = []
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    if (line.startsWith('v ')) {
+      const [, x, y, z] = line.split(/\s+/)
+      verts.push(+x, +y, +z)
+    } else if (line.startsWith('f ')) {
+      const parts = line.trim().split(/\s+/).slice(1)
+      const idx = parts.map(t => {
+        const i = parseInt(t.split('/')[0], 10)
+        return i > 0 ? i - 1 : verts.length / 3 + i
+      })
+      for (let k = 1; k < idx.length - 1; k++) faces.push(idx[0], idx[k], idx[k + 1])
+    }
+  }
+  return { position: Float32Array.from(verts), index: faces }
+}
+
+// ---------- stand it upright ----------
+// Exports are not always authored with the boll pointing up — cotton3 leans 23
+// degrees. Every instance shares one geometry, so a tilt in the source makes the
+// entire field lean identically, which reads as a mistake rather than variety.
+// The axis is taken from the fluff centroid against the bract centroid.
+function upright(geo) {
+  const pos = geo.attributes.position
+  const n = pos.count
+  const ys = []
+  for (let i = 0; i < n; i++) ys.push(pos.getY(i))
+  const sorted = [...ys].sort((a, b) => a - b)
+  const loCut = sorted[Math.floor(n * 0.2)]
+  const hiCut = sorted[Math.floor(n * 0.8)]
+  const top = new THREE.Vector3(), bot = new THREE.Vector3()
+  let nt = 0, nb = 0
+  for (let i = 0; i < n; i++) {
+    const y = ys[i]
+    if (y >= hiCut) { top.x += pos.getX(i); top.y += y; top.z += pos.getZ(i); nt++ }
+    else if (y <= loCut) { bot.x += pos.getX(i); bot.y += y; bot.z += pos.getZ(i); nb++ }
+  }
+  top.divideScalar(nt); bot.divideScalar(nb)
+  const axis = top.sub(bot).normalize()
+  const deg = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(axis.y, -1, 1)))
+  if (deg > 1) {
+    const q = new THREE.Quaternion().setFromUnitVectors(axis, new THREE.Vector3(0, 1, 0))
+    geo.applyQuaternion(q)
+    geo.computeBoundingBox()
+    console.log(`  uprighted: was ${deg.toFixed(1)} deg off vertical`)
+  }
+  return geo
 }
 
 // ---------- procedural paint ----------
@@ -123,15 +179,19 @@ function writeGlb(geo, out) {
   writeFileSync(out, Buffer.concat([header, jHead, jsonBuf, bHead, bin]))
 }
 
-const { position, index } = readGlb(SRC)
+const { position, index } = SRC.endsWith('.obj') ? readObj(SRC) : readGlb(SRC)
 const base = new THREE.BufferGeometry()
 base.setAttribute('position', new THREE.BufferAttribute(position, 3))
 base.setIndex(index)
+// exports are not necessarily authored around the origin — cotton3 sits at x=6.8
+base.center()
+upright(base)
+base.center()
 console.log(`source: ${base.attributes.position.count} verts, ${index.length / 3} tris`)
 
-writeGlb(paint(base.clone()), 'public/cotton-boll-hi.glb')
+writeGlb(paint(base.clone()), `public/${OUT}-hi.glb`)
 
 const target = Math.floor(base.attributes.position.count * (1 - LO_KEEP))
 const lo = new SimplifyModifier().modify(base.clone(), target)
-writeGlb(paint(lo), 'public/cotton-boll-lo.glb')
+writeGlb(paint(lo), `public/${OUT}-lo.glb`)
 console.log(`lo: ${lo.attributes.position.count} verts, ${lo.index.count / 3} tris`)

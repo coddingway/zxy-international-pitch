@@ -58,8 +58,8 @@ export function createCottonScene({ canvas }) {
   const firstMesh = gltf => { let g = null; gltf.scene.traverse(o => { if (o.isMesh && !g) g = o.geometry }); return g }
 
   Promise.all([
-    loader.loadAsync('/cotton-boll-hi.glb'),
-    loader.loadAsync('/cotton-boll-lo.glb'),
+    loader.loadAsync('/cotton3-hi.glb'),
+    loader.loadAsync('/cotton3-lo.glb'),
   ]).then(([hi, lo]) => {
     const hiGeo = firstMesh(hi), loGeo = firstMesh(lo)
     // normalise: the model is ~1.23 units in radius, we want BOLL_RADIUS
