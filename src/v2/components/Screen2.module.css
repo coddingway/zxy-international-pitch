@@ -1,0 +1,244 @@
+/* Figma frame is 1440×907. Everything below is expressed as a fraction of that
+   1440px width (vw), so the field and the clouds scale together as one image. */
+
+/* Screen 2 owns its own scroll rather than the window, so the global
+   `overflow: hidden` (and screen 1) stay untouched. */
+.root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #6f7d5a; /* field green — covers any gap before the photo paints */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.root::-webkit-scrollbar { display: none; }
+
+/* The scroll runway — its height is how much scrolling the whole thing takes.
+   1140vh: 2 viewport heights to fly through the wordmark, then the sequence at
+   ~12px of scroll per frame, then screens 6 and 7. Every constant in Screen2.jsx
+   is a fraction of this, so changing it rescales the whole choreography. */
+.track {
+  position: relative;
+  height: 1140vh;
+}
+
+/* everything the viewer sees, pinned while the runway scrolls past */
+.stage {
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Field, wordmark and clouds, zoomed as one unit. transform-origin is set from
+   JS to the "n" of the wordmark, so the zoom converges on that letter; the
+   centre here is only the fallback before the glyph has been measured. */
+.scene {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  /* No will-change here on purpose. It pins the layer to a raster made at the
+     scale it had when promoted, and the GPU then just stretches that bitmap —
+     so the wordmark turned to mush on the way in and snapped sharp again on the
+     way out, once the scale settled and Chrome re-rastered. Leaving it off lets
+     Chrome re-raster as the scale climbs, which is what keeps the type crisp
+     while we fly through it. */
+}
+
+/* The transition plays as an image sequence blitted to this canvas — see
+   lib/frameSequence.js for why, not <video>. Frames are drawn `contain`, so the
+   whole frame is shown, never cropped or zoomed. White ground behind, which is
+   invisible during the white hand-off in and the sequence's own white ending. */
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.white {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Above screen 6 (15) and four worlds (17) so the cue stays visible on both,
+   but below the whiteout (20) so the transitions still go fully blank. */
+.cueWrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 18;
+  opacity: 0;                /* hidden on screen 2; syncCue turns it on at SWAP */
+  transition: opacity 0.5s ease;
+}
+
+/* image 32 — 1440×1440 square, pulled up 196px so the frame crops it */
+.field {
+  position: absolute;
+  left: 0;
+  top: -13.611vw;
+  width: 100vw;
+  height: 100vw;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* "ZXY International" — sits above the field but below all three clouds, so
+   they drift across it, exactly as the Figma layer order has it. Centred rather
+   than pinned to y=404: its centre is 464 of 907, which is the middle of the
+   frame, and centring holds at any viewport aspect.
+
+   Two elements, because two independent things drive opacity: the reveal
+   animation runs with fill `forwards`, which would override any inline opacity
+   the scroll handler set. Wrapper takes the scroll fade, inner takes the reveal. */
+.brandWrap {
+  position: absolute;
+  left: 50%;
+  top: 51.2%;
+  transform: translate(-50%, -50%);
+  width: 66.875vw;           /* 963/1440 */
+  pointer-events: none;
+}
+
+.brand {
+  margin: 0;
+  font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 8.333vw;        /* 120/1440 */
+  line-height: 1;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  opacity: 0;
+  animation: brandReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+/* Out of a haze: starts blurred and slightly oversized, as if being focused.
+   16px, not more — white type over the bright field washes out completely much
+   past that, so a heavier blur just reads as a late fade rather than a haze.
+   The 0.5s delay lets screen 1's whiteout finish clearing first. */
+@keyframes brandReveal {
+  from { opacity: 0; filter: blur(16px); transform: translateY(0.14em) scale(1.06); }
+  to   { opacity: 1; filter: blur(0);    transform: translateY(0)      scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand { animation: none; opacity: 1; filter: none; }
+}
+
+.cloud {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Clouds cross the full viewport and wrap. Each starts just off one edge and
+   ends just off the other, so the wrap happens while it is fully out of frame —
+   no pop. Cloud 1 and 3 travel left→right, cloud 2 right→left, so they meet and
+   overlap mid-screen. Speeds are deliberately unequal (and non-harmonic) so the
+   crossings never settle into a repeating pattern.
+
+   The negative delays are not arbitrary: each is the exact point in its own
+   cycle where the cloud sits at its Figma left offset, so the first painted
+   frame is the Figma composition and the drift proceeds from there.
+
+   Coverage: each cloud is at least partly on screen for its whole cycle apart
+   from the instant it wraps, so the viewport is never empty. */
+
+.cloud1 {
+  left: 0;
+  top: -4.778vw;
+  width: 57.722vw;
+  height: 40.542vw;
+  animation: crossRight1 90s linear infinite;
+  animation-delay: -24.78s; /* = Figma left -19.375vw */
+}
+
+.cloud2 {
+  left: 0;
+  top: -1.611vw;
+  width: 82.708vw;
+  height: 67.014vw;
+  animation: crossLeft2 75s linear infinite;
+  animation-delay: -17.22s; /* = Figma left 62.639vw */
+}
+
+/* Cloud 3 reuses Cloud 1's bitmap at a smaller size, as in Figma. */
+.cloud3 {
+  left: 0;
+  top: 42.208vw;
+  width: 22.639vw;
+  height: 17.444vw;
+  opacity: 0.9;
+  animation: crossRight3 56s linear infinite;
+  animation-delay: -28s; /* = Figma left 33.681vw */
+}
+
+/* start offsets equal each cloud's own width, so it begins fully off-frame */
+@keyframes crossRight1 {
+  from { transform: translate3d(-64.722vw, 0, 0); }
+  to   { transform: translate3d(100vw, 0, 0); }
+}
+
+@keyframes crossLeft2 {
+  from { transform: translate3d(100vw, 0, 0); }
+  to   { transform: translate3d(-62.708vw, 0, 0); }
+}
+
+@keyframes crossRight3 {
+  from { transform: translate3d(-32.639vw, 0, 0); }
+  to   { transform: translate3d(100vw, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* park them in the original Figma composition rather than at translate 0,
+     which would stack all three against the left edge */
+  .cloud1, .cloud2, .cloud3 { animation: none; }
+  .cloud1 { transform: translate3d(-19.375vw, 0, 0); }
+  .cloud2 { transform: translate3d(62.639vw, 0, 0); }
+  .cloud3 { transform: translate3d(33.681vw, 0, 0); }
+}
+
+/* Screen 6 overlay — arrives at full layout, above everything except the
+   whiteout. Only the jacket inside it scales (see --s6-jacket-scale). It
+   carries its own nav and globe badge. */
+.screen6 {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  z-index: 15;
+}
+
+/* Backdrop behind screen 6 (z below it, above the sequence canvas) so the zoom
+   happens on white instead of on the sequence's last frame. Separate from
+   .white, which is the full-cover whiteout and sits above the nav. */
+.white6 {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 14;
+}
+
+/* Four worlds — above screen 6, below the scroll cue so the cue stays visible
+   on it (the Figma frame keeps a down arrow here too). */
+.screen7 {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+  z-index: 17;
+}

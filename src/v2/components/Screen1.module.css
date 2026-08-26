@@ -1,0 +1,27 @@
+.root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #051928;
+  overflow: hidden;
+}
+
+/* Star field — 2×2 tiled, fixed */
+.stars {
+  position: absolute;
+  inset: 0;
+  background-image: url('/galaxy.png');
+  background-size: 50% 50%;
+  background-repeat: repeat;
+  mix-blend-mode: lighten;
+  pointer-events: none;
+}
+
+/* Globe centered, slightly below middle */
+.globeWrap {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 16.5px);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}

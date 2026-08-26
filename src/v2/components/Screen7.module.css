@@ -1,0 +1,138 @@
+/* Figma frame 1440×907, positions as fractions of that width (vw). */
+
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* All four videos stay mounted and playing, and the switch is a crossfade.
+   Loading or seeking on demand is what produces the glitch — a mounted, already
+   -decoding video has a frame ready the instant its opacity comes up. */
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.videoOn { opacity: 1; }
+
+/* The composition is a fixed 1440x907 artboard scaled to fit and centred, so
+   everything inside uses Figma pixel values and nothing can fall off the bottom.
+   Positioning vertically in vw scaled with WIDTH, which pushed the back-to-top
+   button below the fold on wide viewports. --fit is set by Screen2 on resize. */
+.artboard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1440px;
+  height: 907px;
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  transform-origin: center center;
+}
+
+/* Frame 8 — title block */
+.title {
+  position: absolute;
+  left: 135px;
+  top: 168px;
+  width: 298px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #000;
+}
+
+.titleBig {
+  margin: 0;
+  font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 88px;
+  line-height: 1;
+  white-space: pre-line;
+}
+
+.titleSub {
+  margin: 0;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Group 5 — the four worlds. 72px rhythm from y=354. */
+.worlds {
+  position: absolute;
+  left: 1032px;
+  top: 354px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;                 /* 72px rhythm - 52px line */
+  align-items: flex-start;
+}
+
+.world {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: 'Sofia Sans Semi Condensed', 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 52px;
+  line-height: 1;
+  height: 52px;
+  white-space: nowrap;
+  text-align: left;
+  color: #000;
+  opacity: 0.1;              /* inactive: black at 10%, per Figma */
+  transition: opacity 0.45s ease, color 0.45s ease;
+}
+
+.worldOn {
+  opacity: 1;
+  color: var(--world-ink);
+}
+
+.world:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 4px;
+}
+
+/* Group 6 — back to top */
+.up {
+  position: absolute;
+  left: 1347px;
+  top: 728px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0.5px solid #e7e7e7;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+
+.up:hover { transform: scale(1.08); }
+
+.upIcon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  transform: rotate(180deg);   /* reuse the down arrow glyph */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video, .world, .up { transition: none; }
+}
